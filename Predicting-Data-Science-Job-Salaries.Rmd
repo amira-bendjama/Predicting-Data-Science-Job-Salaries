@@ -44,6 +44,13 @@ head(ds_salaries,5)
 ```
 This dataset has 607 rows and 12 columns
 
+
+We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
+```{r}
+ds_salaries <- subset(ds_salaries, select = -c(X , salary_currency, salary))
+head(ds_salaries, 5)
+```
+
 * Check for null values
 ```{r}
 num_null_rows <- sum(rowSums(is.na(ds_salaries)) == ncol(ds_salaries))
@@ -51,19 +58,22 @@ print(num_null_rows)
 ```
 There are no null values
 
-* Check for duplicates
+* Check for duplicate rows
 ```{r}
 repeated_entries <- subset(ds_salaries, duplicated(ds_salaries))
 print(repeated_entries)
 ```
+There are 42 duplicate rows
 
-There are no duplicates
-
-We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
+* Remove duplicates
 ```{r}
-ds_salaries <- subset(ds_salaries, select = -c(X , salary_currency, salary))
-head(ds_salaries, 5)
+# Remove duplicate rows
+df <- ds_salaries[!duplicated(ds_salaries), ]
+# check again
+repeated_entries_new <- subset(df, duplicated(df))
+print(repeated_entries_new)
 ```
+
 
 3.  **Data Exploration and Visualization**
 
