@@ -20,6 +20,50 @@ output: html_notebook
     To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
 
 2.  **Data Sources and Data preparation**
+ * Install packages 
+```{r}
+install.packages("rpart.plot")
+install.packages("ggplot2")
+install.packages("e1071")
+```
+* Import data
+```{r}
+library(ggplot2)
+ds_salaries <- read.csv("ds_salaries.csv")
+```
+* Data description
+```{r}
+summary(ds_salaries)
+```
+
+
+
+* The first 5 rows 
+```{r}
+head(ds_salaries,5)
+```
+This dataset has 607 rows and 12 columns
+
+* Check for null values
+```{r}
+num_null_rows <- sum(rowSums(is.na(ds_salaries)) == ncol(ds_salaries))
+print(num_null_rows)
+```
+There are no null values
+
+* Check for duplicates
+```{r}
+repeated_entries <- subset(ds_salaries, duplicated(ds_salaries))
+print(repeated_entries)
+```
+
+There are no duplicates
+
+We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
+```{r}
+ds_salaries <- subset(ds_salaries, select = -c(X , salary_currency, salary))
+head(ds_salaries, 5)
+```
 
 3.  **Data Exploration and Visualization**
 
