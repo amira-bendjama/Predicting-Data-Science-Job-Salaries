@@ -168,13 +168,105 @@ metrics_table
 
 2.  Create new variables that compute the relations you have identified in A.2;
 
+* Treatment 1: Determine the credit utilization rate using Bill_Amt and Limit_Bal. The higher the utilization rate the higher the likelihood of default.
+
+    Credit utilization = Bill_Amt / Limit_Bal
+
+  - Create 6 new columns named "Credit_util1", "Credit_util2","Credit_util3","Credit_util4","Credit_util5","Credit_util6" corresponding to "Bill_Amt1" divided by Limit_Bal,... "Bill_Amt6" divded Limit_Bal into a new data frame
+
+```{r}
+# New data frame
+ccnn_update <- data.frame(ccnn)
+
+ccnn_update['Credit_util1'] = ccnn_update['BILL_AMT1'] / ccnn_update['LIMIT_BAL']
+ccnn_update['Credit_util2'] = ccnn_update['BILL_AMT2'] / ccnn_update['LIMIT_BAL']
+ccnn_update['Credit_util3'] = ccnn_update['BILL_AMT3'] / ccnn_update['LIMIT_BAL']
+ccnn_update['Credit_util4'] = ccnn_update['BILL_AMT4'] / ccnn_update['LIMIT_BAL']
+ccnn_update['Credit_util5'] = ccnn_update['BILL_AMT5'] / ccnn_update['LIMIT_BAL']
+ccnn_update['Credit_util6'] = ccnn_update['BILL_AMT6'] / ccnn_update['LIMIT_BAL']
+```
+
+* Treatment 2: Determine whether the user is struggling to meet financial obligations or not by using "Pay_Amt" divided by "Bil_Amt".For example, high bill amount with smaller previous payment amount may result in higher likelihood of default.		
+
+  Payment_ratio = Pay_Amt / Bill_Amt 
+
+   - Create 6 new columns named "Payment_ratio1", "Payment_ratio2","Payment_ratio3", "Payment_ratio4", "Payment_ratio5,"Payment_ratio6"" corresponding to "Pay_Amt1" divided by Bill_Amt1,..,"Pay_Amt6" divided by "Bill_Amt6".
+```{r}
+ccnn_update['Payment_Ratio1'] = ccnn_update['PAY_AMT1'] / ccnn_update['BILL_AMT1']
+ccnn_update['Payment_Ratio2'] = ccnn_update['PAY_AMT2'] / ccnn_update['BILL_AMT2']
+ccnn_update['Payment_Ratio3'] = ccnn_update['PAY_AMT3'] / ccnn_update['BILL_AMT3']
+ccnn_update['Payment_Ratio4'] = ccnn_update['PAY_AMT4'] / ccnn_update['BILL_AMT4']
+ccnn_update['Payment_Ratio5'] = ccnn_update['PAY_AMT5'] / ccnn_update['BILL_AMT5']
+ccnn_update['Payment_Ratio6'] = ccnn_update['PAY_AMT6'] / ccnn_update['BILL_AMT6']
+
+```
+
+  - Since there are some "0" values in numerators and denominators, we replace NaN and Inf values with 0 in the 'Payment_Ratio' columns (1-6)
+
+```{r}
+ccnn_update$Payment_Ratio1 <- ifelse(is.nan(ccnn_update$Payment_Ratio1) | is.infinite(ccnn_update$Payment_Ratio1), 0, ccnn_update$Payment_Ratio1)
+ccnn_update$Payment_Ratio2 <- ifelse(is.nan(ccnn_update$Payment_Ratio2) | is.infinite(ccnn_update$Payment_Ratio2), 0, ccnn_update$Payment_Ratio2)
+ccnn_update$Payment_Ratio3 <- ifelse(is.nan(ccnn_update$Payment_Ratio3) | is.infinite(ccnn_update$Payment_Ratio3), 0, ccnn_update$Payment_Ratio3)
+ccnn_update$Payment_Ratio4 <- ifelse(is.nan(ccnn_update$Payment_Ratio4) | is.infinite(ccnn_update$Payment_Ratio4), 0, ccnn_update$Payment_Ratio4)
+ccnn_update$Payment_Ratio5 <- ifelse(is.nan(ccnn_update$Payment_Ratio5) | is.infinite(ccnn_update$Payment_Ratio5), 0, ccnn_update$Payment_Ratio5)
+ccnn_update$Payment_Ratio6 <- ifelse(is.nan(ccnn_update$Payment_Ratio6) | is.infinite(ccnn_update$Payment_Ratio6), 0, ccnn_update$Payment_Ratio6)
+
+```
+
+  - Check table again with view column
+```{r}
+View(ccnn_update)
+```
+
 3.  Build a model with training data (90% data) to predict default.payment.next.month, using the new relational attributes (plus any other variables you would like to include) here.
+
+```{r}
+set.seed(123)  # For reproducibility
+train_indices_update <- sample(1:nrow(ccnn_update), 0.9 * nrow(ccnn_update))  # 90% for training
+train_update <- ccnn_update[train_indices_update, ]
+test_update <- ccnn_update[-train_indices_update, ]
+```
 
 4.  Run prediction with the model on test data (10% data) and record the following scores:
 
     a\. Present the confusion table with TP, TN, FP, and FN
+```{r}
+#nb_update <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Payment_Ratio1  , data = train_update), Credit_util1 
+
+nb_update <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Credit_util1, data = train_update)
+```
+
+
+```{r}
+predictions_update <- predict(nb_update, newdata = test_update)
+```
+    
+```{r}
+confusion_update <- confusionMatrix(predictions_update, test_update$default.payment.next.month)
+
+TP <- confusion_update$table[2, 2]  # True positives
+TN <- confusion_update$table[1, 1]  # True negatives
+FP <- confusion_update$table[1, 2]  # False positives
+FN <- confusion_update$table[2, 1]  # False negatives
+
+accuracy <- confusion_update$overall["Accuracy"]
+precision <- confusion_update$byClass["Pos Pred Value"]
+recall <- confusion_update$byClass["Sensitivity"]
+F_measure <- confusion_update$byClass["F1"]
+kappa <- confusion_update$overall["Kappa"]
+
+# Print the confusion table
+print(confusion_update$table)
+```
+
 
     b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+```{r}
+# Print the performance metrics
+metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
+metrics_table
+```
+    
 
 **C.3. Examine attribute value distribution (histogram), and perform log transformation on attributes you see fit:**
 
