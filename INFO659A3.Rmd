@@ -115,7 +115,52 @@ View(ccnn)
 
 -   Select 90% of data for training and 10% for testing; • Build a model with training data (90% data) to predict default.payment.next.month, using at least three variables from A.1.
 
+```{r}
+set.seed(123)  # For reproducibility
+train_indices <- sample(1:nrow(ccnn), 0.9 * nrow(ccnn))  # 90% for training
+train <- ccnn[train_indices, ]
+test <- ccnn[-train_indices, ]
+
+```
+
+
 -   Run prediction with the model on test data (10% data) and record the following scores: o Present the confusion table with TP, TN, FP, and FN o Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+
+```{r}
+library(e1071)
+nb <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1, data = train)
+
+```
+
+```{r}
+predictions <- predict(nb, newdata = test)
+
+```
+
+```{r}
+library(caret)
+confusion <- confusionMatrix(predictions, test$default.payment.next.month)
+
+TP <- confusion$table[2, 2]  # True positives
+TN <- confusion$table[1, 1]  # True negatives
+FP <- confusion$table[1, 2]  # False positives
+FN <- confusion$table[2, 1]  # False negatives
+
+accuracy <- confusion$overall["Accuracy"]
+precision <- confusion$byClass["Pos Pred Value"]
+recall <- confusion$byClass["Sensitivity"]
+F_measure <- confusion$byClass["F1"]
+kappa <- confusion$overall["Kappa"]
+
+# Print the confusion table
+print(confusion$table)
+
+# Print the performance metrics
+metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
+metrics_table
+
+```
+
 
 **C.2. Perform data transformation (with new relational attributes) and redo classification:**
 
