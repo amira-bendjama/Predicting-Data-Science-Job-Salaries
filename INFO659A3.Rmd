@@ -1,0 +1,173 @@
+---
+title: "Assignment 3"
+output: html_notebook
+---
+
+**A. Understanding variables and relations in data (2 points)**
+
+**A.1. Discuss how credit and payment history data such as PAY_AMT1 have an impact on payment default.**
+
+| Variable                 | Data Type | Potential impact on "Default" and reason                                      |
+|--------------------------|-----------|-------------------------------------------------------------------------------|
+| Limit_Bal                | numeric   | The higher the limit balance the higher the likelihood of default             |
+| Pay_0, 2, 3, 4, 5, 6     | integer   | The lower the payment status the lower the likelihood of default              |
+| Bill_Amt1, 2, 3, 4, 5, 6 | numeric   | The higher the amount of bill statement the higher the likelihood of default  |
+| Pay_Amt1, 2, 3, 4, 5, 6  | numeric   | The higher the amount of previous payment the lower the likelihood of default |
+
+**A.2. Discuss in what ways some of the above attributes contribute to default.payment.next.month together. Please identify at least two pairs of attributes that can be treated together and how.**
+
+| Variable 1                                                                                                                                                           | Variable 2               | Discuss their relation, how to combine them (ratio, difference, or others) and your reason/theory |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|---------------------------------------------------------------------------------------------------|
+| Limit_Bal                                                                                                                                                            | Bill_Amt1, 2, 3, 4, 5, 6 | We can determine the credit utilization rate                                                      |
+| using these two variables. (Bil_Amt divided by Limit_Bal). The higher the utilization rate the higher the likelihood of default.                                     |                          |                                                                                                   |
+| Bill_Amt1, 2, 3, 4, 5, 6                                                                                                                                             | Pay_Amt1, 2, 3, 4, 5, 6  | Pay_Amt divided by Bil_Amt. This ratio shows if                                                   |
+| the user is struggling to meet financial obligations. For example, high bill amount with smaller previous payment amount may result in higher likelihood of default. |                          |                                                                                                   |
+|                                                                                                                                                                      |                          |                                                                                                   |
+
+Note it is possible that more than two variables can be taken together. If that is the case, extend the above table to accommodate more than two variables. You may review week 7 tutorials on transforming web filter data for related ideas.
+
+**B. Data preparation and cleansing (1 points)**
+
+**B.1.Load data and initial data conversion/transformation:**
+
+1.  Load "UCI_Credit_Card.csv" into data frame variable in R using read.csv().
+
+```{r}
+library(ggplot2)
+cc <- read.csv("UCI_Credit_Card.csv")
+```
+
+2.  Convert the following variables into as nominal (categorical, factor) variables: Sex, Education, Marriage, Pay\_ ?and default.payment.next.month. Transform related demographic variables into nominal values with proper labels using the factor() function.
+
+```{r}
+cc$SEX <- factor(cc$SEX,levels=c(1,2), labels=c("Male", "Female")) 
+```
+
+```{r}
+cc$EDUCATION <- factor(cc$EDUCATION,levels=c(1,2,3,4,5,6), labels=c("graduate school","university","high school", "others", "unknown", "unknown"))
+```
+
+```{r}
+cc$MARRIAGE <- factor(cc$MARRIAGE,levels=c(1,2,3), labels=c("married", "single", "others")) 
+```
+
+-   Since the word labels of PAY_0, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6 are too long for the graphs, I am going to label them with numbers. -2 = "no balance", -1 = "pay duly", 0 = "pay minimum", 1 = "delay one month", 2 = "delay two months", 3 = "delay three months", 4 = "delay four months", 5 = "delay five months", 6 = "delay six months", 7 = "delay seven months", 8 = "delay eight months", 9 = "delay nine months and above"
+
+```{r}
+cc$PAY_0 <- factor(cc$PAY_0,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$PAY_2 <- factor(cc$PAY_2,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$PAY_3 <- factor(cc$PAY_3,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$PAY_4 <- factor(cc$PAY_4,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$PAY_5 <- factor(cc$PAY_5,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$PAY_6 <- factor(cc$PAY_6,levels=c(-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9), labels=c("-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) 
+```
+
+```{r}
+cc$default.payment.next.month <- factor(cc$default.payment.next.month,levels=c(0,1), labels=c("No","Yes"))
+```
+
+3.  Use class() function check on Sex, Education, Marriage, Pay\_? and default.payment.next.month, they should ALL be "factor" variables.
+
+```{r}
+class(cc$SEX)
+class(cc$EDUCATION)
+class(cc$MARRIAGE)
+class(cc$PAY_0)
+class(cc$default.payment.next.month)
+```
+
+**B.2. Create a filtered dataset with only non-negative amounts.**
+
+1.  Use the subset() function to select only positive values on the 6 BILL_AMT variables and 6 PAY_AMT variables.
+
+```{r}
+ccnn <- subset(cc, BILL_AMT1>=0 & BILL_AMT2 >=0 & BILL_AMT3 >=0 & BILL_AMT4 >=0 & BILL_AMT5 >=0 & BILL_AMT6 >=0 & PAY_AMT1>=0 & PAY_AMT2>=0 & PAY_AMT3>=0 & PAY_AMT4>=0 & PAY_AMT5>=0 & PAY_AMT6>=0) 
+
+nrow(ccnn)
+```
+
+2.  Check the number of rows in the filtered subset and you can use View(ccpo) to double check on the data.
+
+```{r}
+View(ccnn)
+```
+
+**C. Data Transformation and Classification/Modeling (4 points)**
+
+**C.1. Pick one classification method, model with default.payment.next.month \~ variables in A.1., and evaluate:**
+
+-   You can pick one of these methods: Naïve Bayes, Decision Tree, SVM, and Neural Networks, Logistic Regression, among others we have discussed.
+
+-   Select 90% of data for training and 10% for testing; • Build a model with training data (90% data) to predict default.payment.next.month, using at least three variables from A.1.
+
+-   Run prediction with the model on test data (10% data) and record the following scores: o Present the confusion table with TP, TN, FP, and FN o Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+
+**C.2. Perform data transformation (with new relational attributes) and redo classification:**
+
+1.  Follow the treatments (at least two relations) of the variable pairs you have identified in A.2;
+
+2.  Create new variables that compute the relations you have identified in A.2;
+
+3.  Build a model with training data (90% data) to predict default.payment.next.month, using the new relational attributes (plus any other variables you would like to include) here.
+
+4.  Run prediction with the model on test data (10% data) and record the following scores:
+
+    a\. Present the confusion table with TP, TN, FP, and FN
+
+    b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+
+**C.3. Examine attribute value distribution (histogram), and perform log transformation on attributes you see fit:**
+
+1.  Create a new attribute that is the logarithm of each attribute with an extremely wide, "skew" distribution.
+
+2.  Remove attributes that are no longer needed in your analysis.
+
+3.  Hopefully data distributions now look "normal".
+
+4.  Build a model with training data (90% data) to predict default.payment.next.month, using at the new relational (and log-transformed) attributes plus any other variables you would like to include here.
+
+5.  Run prediction with the model on test data (10% data) and record the following scores:
+
+    a\. Present the confusion table with TP, TN, FP, and FN
+
+    b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+
+**C.4. Pick another classification model or the same model with different parameter values, and repeat the modeling and evaluation as in C.3. Report the confusion table and results to Table D.**
+
+**D. Evaluation and Results (2 points)**
+
+|     |                                           | Correct % | Precision | Recall | F   | Kappa |
+|-----|-------------------------------------------|-----------|-----------|--------|-----|-------|
+| C1  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
+| C2  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
+| C3  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
+| C4  | Model 2 Name, Variables, Parameters, etc. |           |           |        |     |       |
+
+**E. Report with Interpretation and Conclusion (3 points)**
+
+Discuss the results in Task D and answer the following questions:
+
+**E.1. In terms of the reasons and theories presented in tasks A1 through A2, which ones have been confirmed by your analysis? Please discuss even if there is no obvious answer.**
+
+**E.2. Does data transformation (with new relational variables in C.2) help? Which one helps most and why? Or which does not?**
+
+**E.3. Which classification method(s) and/or parameters appear to perform well? Which ones do not?**
+
+**E.4. Reviewing results in Task D, which evaluation metrics (of Correct%, Kappa, F, Precision, and Recall) best capture how good/poor the result is? Which metric is not as helpful?**
+
+**E.5. Pick the most helpful evaluation metric, which method (with what data transformation if applicable) is the overall winner of the results? Reason about why the method performs well.**
