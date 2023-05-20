@@ -29,7 +29,7 @@ install.packages("e1071")
 * Import data
 ```{r}
 library(ggplot2)
-ds_salaries <- read.csv("ds_salaries.csv")
+ds_salaries <- read.csv("Predicting-Data-Science-Job-Salaries/ds_salaries.csv")
 ```
 * Data description
 ```{r}
