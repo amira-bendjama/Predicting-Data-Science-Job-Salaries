@@ -365,7 +365,7 @@ predictions_log <- predict(nb_log, newdata = test_log)
 ```
     
 ```{r}
-confusion_log <- confusionMatrix(predictions_log, test_update$default.payment.next.month)
+confusion_log <- confusionMatrix(predictions_log, test_log$default.payment.next.month)
 
 TP <- confusion_log$table[2, 2]  # True positives
 TN <- confusion_log$table[1, 1]  # True negatives
@@ -392,7 +392,7 @@ library(rpart)
 decision_tree <- rpart(default.payment.next.month ~ LIMIT_BALl + BILL_AMT1l + PAY_AMT1l + Credit_util1l, data = train_log, method = "class")
 predictions_dt <- predict(decision_tree, newdata = test_log, type = "class")
 
-confusion_dt <- confusionMatrix(predictions_dt, test_update$default.payment.next.month)
+confusion_dt <- confusionMatrix(predictions_dt, test_log$default.payment.next.month)
 
 TP <- confusion_dt$table[2, 2]  # True positives
 TN <- confusion_dt$table[1, 1]  # True negatives
