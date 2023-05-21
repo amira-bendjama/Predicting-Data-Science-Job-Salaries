@@ -272,7 +272,9 @@ metrics_table
 
 1.  Create a new attribute that is the logarithm of each attribute with an extremely wide, "skew" distribution.
 ```{r}
-#ccnn_log<- data.frame(ccnn_update)
+# remove 0 values to avoid -inf
+ccnn_update <- subset(ccnn_update, rowSums(ccnn_update == 0 | ccnn_update == 0.000000000) == 0)
+ccnn_update
 
 ccnn_update$LIMIT_BALl <- log(ccnn_update$LIMIT_BAL)
 
@@ -348,6 +350,7 @@ train_log <- ccnn_update[train_indices, ]
 test_log <- ccnn_update[-train_indices, ]
 
 nb_log <- naiveBayes(default.payment.next.month ~ LIMIT_BALl + BILL_AMT1l + PAY_AMT1l + Credit_util1l, data = train_log)
+
 ```
 
 
