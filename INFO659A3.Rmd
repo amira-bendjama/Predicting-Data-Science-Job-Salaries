@@ -8,7 +8,7 @@ output: html_notebook
 **A.1. Discuss how credit and payment history data such as PAY_AMT1 have an impact on payment default.**
 
 | Variable                 | Data Type | Potential impact on "Default" and reason                                      |
-|--------------------------|-----------|-------------------------------------------------------------------------------|
+|------------------|------------------|------------------------------------|
 | Limit_Bal                | numeric   | The higher the limit balance the higher the likelihood of default             |
 | Pay_0, 2, 3, 4, 5, 6     | integer   | The lower the payment status the lower the likelihood of default              |
 | Bill_Amt1, 2, 3, 4, 5, 6 | numeric   | The higher the amount of bill statement the higher the likelihood of default  |
@@ -16,13 +16,10 @@ output: html_notebook
 
 **A.2. Discuss in what ways some of the above attributes contribute to default.payment.next.month together. Please identify at least two pairs of attributes that can be treated together and how.**
 
-| Variable 1                                                                                                                                                           | Variable 2               | Discuss their relation, how to combine them (ratio, difference, or others) and your reason/theory |
-|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|---------------------------------------------------------------------------------------------------|
-| Limit_Bal                                                                                                                                                            | Bill_Amt1, 2, 3, 4, 5, 6 | We can determine the credit utilization rate                                                      |
-| using these two variables. (Bil_Amt divided by Limit_Bal). The higher the utilization rate the higher the likelihood of default.                                     |                          |                                                                                                   |
-| Bill_Amt1, 2, 3, 4, 5, 6                                                                                                                                             | Pay_Amt1, 2, 3, 4, 5, 6  | Pay_Amt divided by Bil_Amt. This ratio shows if                                                   |
-| the user is struggling to meet financial obligations. For example, high bill amount with smaller previous payment amount may result in higher likelihood of default. |                          |                                                                                                   |
-|                                                                                                                                                                      |                          |                                                                                                   |
+| Variable 1               | Variable 2               | Discuss their relation, how to combine them (ratio, difference, or others) and your reason/theory                                                                                                                    |
+|------------------|------------------|------------------------------------|
+| Limit_Bal                | Bill_Amt1, 2, 3, 4, 5, 6 | We can determine the credit utilization rate using these two variables. (Bil_Amt divided by Limit_Bal). The higher the utilization rate the higher the likelihood of default.                                        |
+| Bill_Amt1, 2, 3, 4, 5, 6 | Pay_Amt1, 2, 3, 4, 5, 6  | Pay_Amt divided by Bil_Amt. This ratio shows if the user is struggling to meet financial obligations. For example, high bill amount with smaller previous payment amount may result in higher likelihood of default. |
 
 Note it is possible that more than two variables can be taken together. If that is the case, extend the above table to accommodate more than two variables. You may review week 7 tutorials on transforming web filter data for related ideas.
 
@@ -91,7 +88,7 @@ class(cc$PAY_0)
 class(cc$default.payment.next.month)
 ```
 
-**B.2. Create a filtered dataset with only non-negative amounts.**
+**B.2. Create a filtered data set with only non-negative amounts.**
 
 1.  Use the subset() function to select only positive values on the 6 BILL_AMT variables and 6 PAY_AMT variables.
 
@@ -123,7 +120,6 @@ test <- ccnn[-train_indices, ]
 
 ```
 
-
 -   Run prediction with the model on test data (10% data) and record the following scores: o Present the confusion table with TP, TN, FP, and FN o Report Accuracy, Precision, Recall, F, and Kappa in Table D.
 
 ```{r}
@@ -139,6 +135,7 @@ predictions <- predict(nb, newdata = test)
 
 ```{r}
 library(caret)
+library(knitr)
 confusion <- confusionMatrix(predictions, test$default.payment.next.month)
 
 TP <- confusion$table[2, 2]  # True positives
@@ -153,14 +150,13 @@ F_measure <- confusion$byClass["F1"]
 kappa <- confusion$overall["Kappa"]
 
 # Print the confusion table
-print(confusion$table)
+kable(confusion$table)
 
 # Print the performance metrics
 metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
-metrics_table
+kable(metrics_table)
 
 ```
-
 
 **C.2. Perform data transformation (with new relational attributes) and redo classification:**
 
@@ -168,11 +164,11 @@ metrics_table
 
 2.  Create new variables that compute the relations you have identified in A.2;
 
-* Treatment 1: Determine the credit utilization rate using Bill_Amt and Limit_Bal. The higher the utilization rate the higher the likelihood of default.
+-   Treatment 1: Determine the credit utilization rate using Bill_Amt and Limit_Bal. The higher the utilization rate the higher the likelihood of default.
 
     Credit utilization = Bill_Amt / Limit_Bal
 
-  - Create 6 new columns named "Credit_util1", "Credit_util2","Credit_util3","Credit_util4","Credit_util5","Credit_util6" corresponding to "Bill_Amt1" divided by Limit_Bal,... "Bill_Amt6" divded Limit_Bal into a new data frame
+    -   Create 6 new columns named "Credit_util1", "Credit_util2","Credit_util3","Credit_util4","Credit_util5","Credit_util6" corresponding to "Bill_Amt1" divided by Limit_Bal,... "Bill_Amt6" divded Limit_Bal into a new data frame
 
 ```{r}
 # New data frame
@@ -186,22 +182,23 @@ ccnn_update['Credit_util5'] = ccnn_update['BILL_AMT5'] / ccnn_update['LIMIT_BAL'
 ccnn_update['Credit_util6'] = ccnn_update['BILL_AMT6'] / ccnn_update['LIMIT_BAL']
 ```
 
-* Treatment 2: Determine whether the user is struggling to meet financial obligations or not by using "Pay_Amt" divided by "Bil_Amt".For example, high bill amount with smaller previous payment amount may result in higher likelihood of default.		
+-   Treatment 2: Determine whether the user is struggling to meet financial obligations or not by using "Pay_Amt" divided by "Bil_Amt".For example, high bill amount with smaller previous payment amount may result in higher likelihood of default.
 
-  Payment_ratio = Pay_Amt / Bill_Amt 
+    Payment_ratio = Pay_Amt / Bill_Amt
 
-   - Create 6 new columns named "Payment_ratio1", "Payment_ratio2","Payment_ratio3", "Payment_ratio4", "Payment_ratio5,"Payment_ratio6"" corresponding to "Pay_Amt1" divided by Bill_Amt1,..,"Pay_Amt6" divided by "Bill_Amt6".
-```{r}
-ccnn_update['Payment_Ratio1'] = ccnn_update['PAY_AMT1'] / ccnn_update['BILL_AMT1']
-ccnn_update['Payment_Ratio2'] = ccnn_update['PAY_AMT2'] / ccnn_update['BILL_AMT2']
-ccnn_update['Payment_Ratio3'] = ccnn_update['PAY_AMT3'] / ccnn_update['BILL_AMT3']
-ccnn_update['Payment_Ratio4'] = ccnn_update['PAY_AMT4'] / ccnn_update['BILL_AMT4']
-ccnn_update['Payment_Ratio5'] = ccnn_update['PAY_AMT5'] / ccnn_update['BILL_AMT5']
-ccnn_update['Payment_Ratio6'] = ccnn_update['PAY_AMT6'] / ccnn_update['BILL_AMT6']
+    -   Create 6 new columns named "Payment_ratio1", "Payment_ratio2","Payment_ratio3", "Payment_ratio4", "Payment_ratio5,"Payment_ratio6"" corresponding to "Pay_Amt1" divided by Bill_Amt1,..,"Pay_Amt6" divided by "Bill_Amt6".
 
-```
+    ```{r}
+    ccnn_update['Payment_Ratio1'] = ccnn_update['PAY_AMT1'] / ccnn_update['BILL_AMT1']
+    ccnn_update['Payment_Ratio2'] = ccnn_update['PAY_AMT2'] / ccnn_update['BILL_AMT2']
+    ccnn_update['Payment_Ratio3'] = ccnn_update['PAY_AMT3'] / ccnn_update['BILL_AMT3']
+    ccnn_update['Payment_Ratio4'] = ccnn_update['PAY_AMT4'] / ccnn_update['BILL_AMT4']
+    ccnn_update['Payment_Ratio5'] = ccnn_update['PAY_AMT5'] / ccnn_update['BILL_AMT5']
+    ccnn_update['Payment_Ratio6'] = ccnn_update['PAY_AMT6'] / ccnn_update['BILL_AMT6']
 
-  - Since there are some "0" values in numerators and denominators, we replace NaN and Inf values with 0 in the 'Payment_Ratio' columns (1-6)
+    ```
+
+    -   Since there are some "0" values in numerators and denominators, we replace NaN and Inf values with 0 in the 'Payment_Ratio' columns (1-6)
 
 ```{r}
 ccnn_update$Payment_Ratio1 <- ifelse(is.nan(ccnn_update$Payment_Ratio1) | is.infinite(ccnn_update$Payment_Ratio1), 0, ccnn_update$Payment_Ratio1)
@@ -213,7 +210,8 @@ ccnn_update$Payment_Ratio6 <- ifelse(is.nan(ccnn_update$Payment_Ratio6) | is.inf
 
 ```
 
-  - Check table again with view column
+-   Check table again with view column
+
 ```{r}
 View(ccnn_update)
 ```
@@ -229,113 +227,177 @@ test_update <- ccnn_update[-train_indices_update, ]
 
 4.  Run prediction with the model on test data (10% data) and record the following scores:
 
-    a\. Present the confusion table with TP, TN, FP, and FN
-```{r}
-#nb_update <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Payment_Ratio1  , data = train_update), Credit_util1 
+**Treatment 1**: with Credit_util1
 
-nb_update <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Credit_util1, data = train_update)
+```         
+a\. Present the confusion table with TP, TN, FP, and FN
 ```
 
-
 ```{r}
-predictions_update <- predict(nb_update, newdata = test_update)
+nb_update1 <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Credit_util1, data = train_update)
 ```
-    
+
 ```{r}
-confusion_update <- confusionMatrix(predictions_update, test_update$default.payment.next.month)
+predictions_update1 <- predict(nb_update1, newdata = test_update)
+```
 
-TP <- confusion_update$table[2, 2]  # True positives
-TN <- confusion_update$table[1, 1]  # True negatives
-FP <- confusion_update$table[1, 2]  # False positives
-FN <- confusion_update$table[2, 1]  # False negatives
+```{r}
+confusion_update1 <- confusionMatrix(predictions_update1, test_update$default.payment.next.month)
 
-accuracy <- confusion_update$overall["Accuracy"]
-precision <- confusion_update$byClass["Pos Pred Value"]
-recall <- confusion_update$byClass["Sensitivity"]
-F_measure <- confusion_update$byClass["F1"]
-kappa <- confusion_update$overall["Kappa"]
+TP <- confusion_update1$table[2, 2]  # True positives
+TN <- confusion_update1$table[1, 1]  # True negatives
+FP <- confusion_update1$table[1, 2]  # False positives
+FN <- confusion_update1$table[2, 1]  # False negatives
+
+accuracy <- confusion_update1$overall["Accuracy"]
+precision <- confusion_update1$byClass["Pos Pred Value"]
+recall <- confusion_update1$byClass["Sensitivity"]
+F_measure <- confusion_update1$byClass["F1"]
+kappa <- confusion_update1$overall["Kappa"]
 
 # Print the confusion table
-print(confusion_update$table)
+kable(confusion_update1$table)
 ```
 
+```         
+b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+```
 
-    b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
 ```{r}
 # Print the performance metrics
 metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
-metrics_table
+kable(metrics_table)
 ```
-    
+
+**Treatment 2:** with Payment_Ratio1
+
+a\. Present the confusion table with TP, TN, FP, and FN
+
+```{r}
+nb_update2 <- naiveBayes(default.payment.next.month ~ LIMIT_BAL + BILL_AMT1 + PAY_AMT1 + Payment_Ratio1  , data = train_update)
+```
+
+```{r}
+predictions_update2 <- predict(nb_update2, newdata = test_update)
+```
+
+```{r}
+confusion_update2 <- confusionMatrix(predictions_update2, test_update$default.payment.next.month)
+
+TP <- confusion_update2$table[2, 2]  # True positives
+TN <- confusion_update2$table[1, 1]  # True negatives
+FP <- confusion_update2$table[1, 2]  # False positives
+FN <- confusion_update2$table[2, 1]  # False negatives
+
+accuracy <- confusion_update2$overall["Accuracy"]
+precision <- confusion_update2$byClass["Pos Pred Value"]
+recall <- confusion_update2$byClass["Sensitivity"]
+F_measure <- confusion_update2$byClass["F1"]
+kappa <- confusion_update2$overall["Kappa"]
+
+# Print the confusion table
+kable(confusion_update2$table)
+```
+
+```         
+b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
+```
+
+```{r}
+# Print the performance metrics
+metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
+kable(metrics_table)
+```
+
+-   The second treatment using Payment_Ratio1 results in a low accuracy of 0.2935518. Therefore, we will use treatment 1 for this model.
 
 **C.3. Examine attribute value distribution (histogram), and perform log transformation on attributes you see fit:**
 
 1.  Create a new attribute that is the logarithm of each attribute with an extremely wide, "skew" distribution.
+
 ```{r}
 # remove 0 values to avoid -inf
 ccnn_update <- subset(ccnn_update, rowSums(ccnn_update == 0 | ccnn_update == 0.000000000) == 0)
+
+
 ccnn_update
 
-ccnn_update$LIMIT_BALl <- log(ccnn_update$LIMIT_BAL)
+ccnn_update_log <- data.frame(ccnn_update) 
 
-ccnn_update$BILL_AMT1l <- log(ccnn_update$BILL_AMT1)
-ccnn_update$BILL_AMT2l <- log(ccnn_update$BILL_AMT2)
-ccnn_update$BILL_AMT3l <- log(ccnn_update$BILL_AMT3)
-ccnn_update$BILL_AMT4l <- log(ccnn_update$BILL_AMT4)
-ccnn_update$BILL_AMT5l <- log(ccnn_update$BILL_AMT5)
-ccnn_update$BILL_AMT6l <- log(ccnn_update$BILL_AMT6)
+ccnn_update_log$LIMIT_BALl <- log(ccnn_update_log$LIMIT_BAL)
 
-ccnn_update$PAY_AMT1l <- log(ccnn_update$PAY_AMT1)
-ccnn_update$PAY_AMT2l <- log(ccnn_update$PAY_AMT2)
-ccnn_update$PAY_AMT3l <- log(ccnn_update$PAY_AMT3)
-ccnn_update$PAY_AMT4l <- log(ccnn_update$PAY_AMT4)
-ccnn_update$PAY_AMT5l <- log(ccnn_update$PAY_AMT5)
-ccnn_update$PAY_AMT6l <- log(ccnn_update$PAY_AMT6)
+ccnn_update_log$BILL_AMT1l <- log(ccnn_update_log$BILL_AMT1)
+ccnn_update_log$BILL_AMT2l <- log(ccnn_update_log$BILL_AMT2)
+ccnn_update_log$BILL_AMT3l <- log(ccnn_update_log$BILL_AMT3)
+ccnn_update_log$BILL_AMT4l <- log(ccnn_update_log$BILL_AMT4)
+ccnn_update_log$BILL_AMT5l <- log(ccnn_update_log$BILL_AMT5)
+ccnn_update_log$BILL_AMT6l <- log(ccnn_update_log$BILL_AMT6)
 
-ccnn_update$Credit_util1l <- log(ccnn_update$Credit_util1)
-ccnn_update$Credit_util2l <- log(ccnn_update$Credit_util2)
-ccnn_update$Credit_util3l <- log(ccnn_update$Credit_util3)
-ccnn_update$Credit_util4l <- log(ccnn_update$Credit_util4)
-ccnn_update$Credit_util5l <- log(ccnn_update$Credit_util5)
-ccnn_update$Credit_util6l <- log(ccnn_update$Credit_util6)
+ccnn_update_log$PAY_AMT1l <- log(ccnn_update_log$PAY_AMT1)
+ccnn_update_log$PAY_AMT2l <- log(ccnn_update_log$PAY_AMT2)
+ccnn_update_log$PAY_AMT3l <- log(ccnn_update_log$PAY_AMT3)
+ccnn_update_log$PAY_AMT4l <- log(ccnn_update_log$PAY_AMT4)
+ccnn_update_log$PAY_AMT5l <- log(ccnn_update_log$PAY_AMT5)
+ccnn_update_log$PAY_AMT6l <- log(ccnn_update_log$PAY_AMT6)
+
+ccnn_update_log$Credit_util1l <- log(ccnn_update_log$Credit_util1)
+ccnn_update_log$Credit_util2l <- log(ccnn_update_log$Credit_util2)
+ccnn_update_log$Credit_util3l <- log(ccnn_update_log$Credit_util3)
+ccnn_update_log$Credit_util4l <- log(ccnn_update_log$Credit_util4)
+ccnn_update_log$Credit_util5l <- log(ccnn_update_log$Credit_util5)
+ccnn_update_log$Credit_util6l <- log(ccnn_update_log$Credit_util6)
 
 
-
-#Histrograms before transformation 
-hist(ccnn_update$LIMIT_BAL)
-hist(ccnn_update$BILL_AMT1)
-hist(ccnn_update$PAY_AMT1)
-hist(ccnn_update$Credit_util1)
-
-# histograms after
-hist(ccnn_update$LIMIT_BALl)
-hist(ccnn_update$BILL_AMT1l)
-hist(ccnn_update$PAY_AMT1l)
-hist(ccnn_update$Credit_util1l)
 ```
 
+```{r}
+#Histograms before transformation 
+library(ggplot2)
+ggplot(ccnn_update, aes(x = LIMIT_BAL)) +
+  geom_histogram()
+ggplot(ccnn_update, aes(x = BILL_AMT1)) +
+  geom_histogram()
+ggplot(ccnn_update, aes(x = PAY_AMT1)) +
+  geom_histogram()
+ggplot(ccnn_update, aes(x = Credit_util1)) +
+  geom_histogram()
+```
+
+```{r}
+# histograms after
+library(ggplot2)
+ggplot(ccnn_update_log, aes(x = LIMIT_BALl)) +
+  geom_histogram()
+ggplot(ccnn_update_log, aes(x = BILL_AMT1l)) +
+  geom_histogram()
+ggplot(ccnn_update_log, aes(x = PAY_AMT1l)) +
+  geom_histogram()
+ggplot(ccnn_update_log, aes(x = Credit_util1l)) +
+  geom_histogram()
+```
 
 2.  Remove attributes that are no longer needed in your analysis.
+
 ```{r}
-ccnn_update$LIMIT_BAL <- NULL
-ccnn_update$BILL_AMT1 <- NULL
-ccnn_update$BILL_AMT2 <- NULL
-ccnn_update$BILL_AMT3 <- NULL
-ccnn_update$BILL_AMT4 <- NULL
-ccnn_update$BILL_AMT5 <- NULL
-ccnn_update$BILL_AMT6 <- NULL
-ccnn_update$PAY_AMT1 <- NULL
-ccnn_update$PAY_AMT2 <- NULL
-ccnn_update$PAY_AMT3 <- NULL
-ccnn_update$PAY_AMT4 <- NULL
-ccnn_update$PAY_AMT5 <- NULL
-ccnn_update$PAY_AMT6 <- NULL
-ccnn_update$Credit_util1 <- NULL
-ccnn_update$Credit_util2 <- NULL
-ccnn_update$Credit_util3 <- NULL
-ccnn_update$Credit_util4 <- NULL
-ccnn_update$Credit_util5 <- NULL
-ccnn_update$Credit_util6 <- NULL
+ccnn_update_log$LIMIT_BAL <- NULL
+ccnn_update_log$BILL_AMT1 <- NULL
+ccnn_update_log$BILL_AMT2 <- NULL
+ccnn_update_log$BILL_AMT3 <- NULL
+ccnn_update_log$BILL_AMT4 <- NULL
+ccnn_update_log$BILL_AMT5 <- NULL
+ccnn_update_log$BILL_AMT6 <- NULL
+ccnn_update_log$PAY_AMT1 <- NULL
+ccnn_update_log$PAY_AMT2 <- NULL
+ccnn_update_log$PAY_AMT3 <- NULL
+ccnn_update_log$PAY_AMT4 <- NULL
+ccnn_update_log$PAY_AMT5 <- NULL
+ccnn_update_log$PAY_AMT6 <- NULL
+ccnn_update_log$Credit_util1 <- NULL
+ccnn_update_log$Credit_util2 <- NULL
+ccnn_update_log$Credit_util3 <- NULL
+ccnn_update_log$Credit_util4 <- NULL
+ccnn_update_log$Credit_util5 <- NULL
+ccnn_update_log$Credit_util6 <- NULL
 
 ```
 
@@ -345,28 +407,24 @@ ccnn_update$Credit_util6 <- NULL
 
 ```{r}
 set.seed(123)  # For reproducibility
-train_indices <- sample(1:nrow(ccnn_update), 0.9 * nrow(ccnn_update))  # 90% for training
-train_log <- ccnn_update[train_indices, ]
-test_log <- ccnn_update[-train_indices, ]
+train_indices <- sample(1:nrow(ccnn_update_log), 0.9 * nrow(ccnn_update_log))  # 90% for training
+train_log <- ccnn_update_log[train_indices, ]
+test_log <- ccnn_update_log[-train_indices, ]
 
 nb_log <- naiveBayes(default.payment.next.month ~ LIMIT_BALl + BILL_AMT1l + PAY_AMT1l + Credit_util1l, data = train_log)
 
 ```
-
-
-
 
 5.  Run prediction with the model on test data (10% data) and record the following scores:
 
     a\. Present the confusion table with TP, TN, FP, and FN
 
     b\. Report Accuracy, Precision, Recall, F, and Kappa in Table D.
-    
-    
+
 ```{r}
 predictions_log <- predict(nb_log, newdata = test_log)
 ```
-    
+
 ```{r}
 confusion_log <- confusionMatrix(predictions_log, test_log$default.payment.next.month)
 
@@ -382,11 +440,11 @@ F_measure <- confusion_log$byClass["F1"]
 kappa <- confusion_log$overall["Kappa"]
 
 # Print the confusion table
-print(confusion_log$table)
+kable(confusion_log$table)
 
 metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
-metrics_table
-``` 
+kable(metrics_table)
+```
 
 **C.4. Pick another classification model or the same model with different parameter values, and repeat the modeling and evaluation as in C.3. Report the confusion table and results to Table D.**
 
@@ -412,19 +470,20 @@ F_measure <- confusion_dt$byClass["F1"]
 kappa <- confusion_dt$overall["Kappa"]
 
 # Print the confusion table
-print(confusion_dt$table)
+kable(confusion_dt$table)
 
 metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
-metrics_table
+kable(metrics_table)
 ```
+
 **D. Evaluation and Results (2 points)**
 
-|     |                                           | Correct % | Precision | Recall | F   | Kappa |
-|-----|-------------------------------------------|-----------|-----------|--------|-----|-------|
-| C1  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
-| C2  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
-| C3  | Model 1 Name, Variables, Parameters, etc. |           |           |        |     |       |
-| C4  | Model 2 Name, Variables, Parameters, etc. |           |           |        |     |       |
+|     |                                                           | Correct % | Precision | Recall    | F         | Kappa      |
+|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+| C1  | NB with LIMIT_BAL1, BILL_AMT1, PAY_AMT1                   | 0.7687923 | 0.7687923 | 1         | 0.869285  | 0          |
+| C2  | NB with LIMIT_BAL1, BILL_AMT1, PAY_AMT1, Credit_util1     | 0.7100107 | 0.7707494 | 0.886469  | 0.824569  | 0.01179413 |
+| C3  | NB with LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l | 0.848     | 0.8744395 | 0.9512195 | 0.911215  | 0.3898523  |
+| C4  | DT with LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l | 0.812     | 0.8376068 | 0.9560976 | 0.8929385 | 0.1491673  |
 
 **E. Report with Interpretation and Conclusion (3 points)**
 
@@ -432,10 +491,36 @@ Discuss the results in Task D and answer the following questions:
 
 **E.1. In terms of the reasons and theories presented in tasks A1 through A2, which ones have been confirmed by your analysis? Please discuss even if there is no obvious answer.**
 
+-   In A1, we made an assumption that the variables LIMIT_BAL, BILL_AMT and PAY_AMT can predict the likelihood of default. However, model C1 using only those three variables is only able to predict negative.
+
+-   For A2 theories, it's confirmed that we can use the credit utilization rate to determine the likelihood of default, since the model using Credit_util1 in C2 has accuracy of 0.7100107. The theory that Payment_Ratio can predict the the likelihood of default has not been confirmed due to the low accuracy showing in C2
+
 **E.2. Does data transformation (with new relational variables in C.2) help? Which one helps most and why? Or which does not?**
+
+-   In C3 model, we performed the following transformation. First, we remove the all the rows with 0 values. Then we applied the log transformation to address the skewness of data distribution. These two steps help improve the performance of the model. Accuracy is increased to 0.848 from 0.7100107. Precision is increased to 0.8744395 from 0.7707494.
+-   The log transform is helpful because it address the skewness of data distribution.
 
 **E.3. Which classification method(s) and/or parameters appear to perform well? Which ones do not?**
 
+-   Naive Bayes classification with variables LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l has the best performance.
+-   Naive Bayes classification with variables LIMIT_BAL1, BILL_AMT1, PAY_AMT1 does not have good performance.
+
 **E.4. Reviewing results in Task D, which evaluation metrics (of Correct%, Kappa, F, Precision, and Recall) best capture how good/poor the result is? Which metric is not as helpful?**
 
+-   The evaluation metrics that best capture how good the results are include precision, recall, F1-score, and Kappa. These metrics provide a comprehensive assessment of the model's performance, considering both false positives and false negatives.
+
+-   Accuracy (Correct%) alone is not as helpful for assessing model performance, especially in the case of imbalanced data set. It does not provide insights into the model's ability to correctly identify default cases or avoid false positives..
+
 **E.5. Pick the most helpful evaluation metric, which method (with what data transformation if applicable) is the overall winner of the results? Reason about why the method performs well.**
+
+-   The evaluation metric that best captures this requirement is the F, which combines precision and recall into a single metric, giving equal importance to both. It provides a balanced measure of the model's performance by considering false positives and false negatives.
+
+C1: F1 = 0.869285
+
+C2: F1 = 0.824569
+
+C3: F1 = 0.911215
+
+C4: F1 = 0.8929385
+
+Method C3 (NB with LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l) achieves the highest score among the provided methods. This method performs well in terms of precision, recall, and overall balance between the two. Additionally, it has the highest Kappa value, indicating substantial agreement beyond chance.
