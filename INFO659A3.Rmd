@@ -383,6 +383,9 @@ kappa <- confusion_log$overall["Kappa"]
 
 # Print the confusion table
 print(confusion_log$table)
+
+metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
+metrics_table
 ``` 
 
 **C.4. Pick another classification model or the same model with different parameter values, and repeat the modeling and evaluation as in C.3. Report the confusion table and results to Table D.**
@@ -411,6 +414,8 @@ kappa <- confusion_dt$overall["Kappa"]
 # Print the confusion table
 print(confusion_dt$table)
 
+metrics_table <- data.frame(TP, TN, FP, FN, accuracy, precision, recall, F_measure, kappa)
+metrics_table
 ```
 **D. Evaluation and Results (2 points)**
 
