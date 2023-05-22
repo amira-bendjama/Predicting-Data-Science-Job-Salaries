@@ -1,6 +1,8 @@
 ---
 title: "Data Science Salaries"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Predicting Data Science Salaries
@@ -22,11 +24,11 @@ output: html_notebook
 2.  **Data Sources and Data preparation**
  * Install packages 
 ```{r}
-install.packages("rpart.plot")
-install.packages("ggplot2")
-install.packages("e1071")
+#install.packages("rpart.plot")
+#install.packages("ggplot2")
+#install.packages("e1071")
 # Install the plotly package
-install.packages("plotly")
+#install.packages("plotly")
 
 ```
 * Import data
