@@ -502,8 +502,8 @@ Discuss the results in Task D and answer the following questions:
 
 **E.3. Which classification method(s) and/or parameters appear to perform well? Which ones do not?**
 
--   Naive Bayes classification with variables LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l has the best performance.
--   Naive Bayes classification with variables LIMIT_BAL1, BILL_AMT1, PAY_AMT1 does not have good performance.
+-   The best performing model was Naive Bayes classification after log transformation with variables LIMIT_BAL1l, BILL_AMT1l, PAY_AMT1l, Credit_util1l
+-   The worse performing model was Naive Bayes classification with relational attributes such as LIMIT_BAL1, BILL_AMT1, PAY_AMT1
 
 **E.4. Reviewing results in Task D, which evaluation metrics (of Correct%, Kappa, F, Precision, and Recall) best capture how good/poor the result is? Which metric is not as helpful?**
 
