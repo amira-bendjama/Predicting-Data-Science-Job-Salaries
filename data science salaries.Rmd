@@ -1,0 +1,318 @@
+---
+title: "Data Science Salaries"
+output: html_notebook
+---
+
+# Predicting Data Science Salaries
+
+***Anh Nguyen, Amira Bendjama, Hong Doan***
+
+1.  **Introduction and Problem Statement**\
+
+    The field of data science has experienced remarkable growth in recent years, with organizations across diverse industries recognizing the value of data-driven decision making. According to an article by 365 Data Science, the US Bureau of Labor Statistics estimated that the employment rate for data scientists will grow by 36% from 2021 to 2031. This rate is significantly higher than the average growth rate of 5%, indicating substantial growth and demand for data science talent. The surging demand for data science presents both opportunities and challenges for job seekers, particularly recent graduates. One of the significant hurdles they face is the lack of salary transparency in the data science job market. This opacity creates uncertainty regarding compensation and hinders job seekers' ability to negotiate fair salaries.
+
+    There are significant variations in data science salaries across different industries and locations. For instance, according to Zippia, data scientists working in the finance and technology sectors tend to earn higher salaries compared to those in other industries. Similarly, the geographical location also plays a crucial role in determining salaries. Large cities with higher concentration of tech companies and living costs such as San Francisco and New York offer higher salaries than smaller cities.
+
+    The discrepancies in data science salaries can also be attributed to various factors, including job responsibilities, experience level, educational background, and specific skill sets. A study conducted by Burtch Works, a leading executive recruiting firm, found that data scientists with advanced degrees, such as Ph.D., tend to command higher salaries compared to those with bachelor's or master's degrees. Similarly, professionals with expertise in specialized areas, such as machine learning or natural language processing, often earn higher salaries due to the high demand for these skills.
+
+    According to a report surveyed 1,000 US-based full-time employees, conducted by Visier, 79% of all survey respondents want some form of pay transparency and 32% want total transparency, in which all employee salaries are publicized. However, the 2022 Pay Clarity Survey by WTW found that only 17% of companies are disclosing pay range information in U.S. locations where not required by state or local laws. For the states that have pay transparency laws such as Colorado and New York, there has been a decline in job postings since the law went into effect. Some employers comply with the new laws by expanding the salary ranges, sometimes to ridiculous lengths. These statistics highlight the lack of pay transparency not only in the field of data science, but across multiple job markets. Job seekers often struggle to estimate salaries for data science positions due to the scarcity of reliable information.
+
+    To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
+
+2.  **Data Sources and Data preparation**
+ * Install packages 
+```{r}
+install.packages("rpart.plot")
+install.packages("ggplot2")
+install.packages("e1071")
+# Install the plotly package
+install.packages("plotly")
+
+```
+* Import data
+```{r}
+library(ggplot2)
+ds_salaries <- read.csv("ds_salaries.csv")
+```
+* Data description
+```{r}
+summary(ds_salaries)
+
+```
+
+
+
+* The first 5 rows 
+```{r}
+head(ds_salaries,5)
+```
+This dataset has 607 rows and 12 columns
+
+
+We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
+```{r}
+ds_salaries <- subset(ds_salaries, select = -c(X , salary_currency, salary))
+head(ds_salaries, 5)
+```
+
+* Check for null values
+```{r}
+num_null_rows <- sum(rowSums(is.na(ds_salaries)) == ncol(ds_salaries))
+print(num_null_rows)
+```
+There are no null values
+
+* Check for duplicate rows
+```{r}
+repeated_entries <- subset(ds_salaries, duplicated(ds_salaries))
+print(repeated_entries)
+```
+There are 42 duplicate rows
+
+* Remove duplicates
+```{r}
+# Remove duplicate rows
+df <- ds_salaries[!duplicated(ds_salaries), ]
+# check again
+repeated_entries_new <- subset(df, duplicated(df))
+print(repeated_entries_new)
+```
+### Salaries groups 
+Adding new column to split our salaries into three groups Low , High, Medium.The approach is to use Percentiles by Dividing the dataset based on them. Hence, we are classifying salaries below the 25th percentile as "Low", salaries between the 25th and 75th percentile as "Medium", and salaries above the 75th percentile as "High".
+
+```{r}
+# adding new column 
+# Calculate the percentiles
+percentiles <- quantile(df$salary_in_usd, probs = c(0.25, 0.75))
+
+# Define the thresholds
+low_threshold <- percentiles[1]  # 25th percentile
+high_threshold <- percentiles[2]  # 75th percentile
+
+# Create a new column based on percentiles
+df$salary_classification <- ifelse(df$salary_in_usd < low_threshold, "Low",
+                                   ifelse(df$salary_in_usd > high_threshold, "High", "Medium"))
+
+```
+
+
+3.  **Data Exploration and Visualization**
+
+### Top 10 Jobs in the dataset: 
+
+
+
+```{r}
+# Get top 10 job titles and their value counts
+top10_job_title <- head(sort(table(df$job_title), decreasing = TRUE), 10)
+
+top10_job_title_df <- data.frame(job_title = names(top10_job_title), count = as.numeric(top10_job_title))
+top10_job_title_df
+
+```
+```{r}
+# Load the required packages
+library(plotly)
+
+# Define custom color palette
+custom_colors <- c("#FF6361", "#FFA600", "#FFD700", "#FF76BC", "#69D2E7", "#6A0572", "#FF34B3", "#118AB2", "#FFFF99", "#FFC1CC")
+
+# Create bar plot
+fig <- plot_ly(data = top10_job_title_df, x = ~reorder(job_title, -count), y = ~count, type = "bar",
+               marker = list(color = custom_colors), text = ~count) %>%
+  layout(title = "Top 10 Job Titles", xaxis = list(title = "Job Titles"), yaxis = list(title = "Count"),
+         font = list(size = 17), template = "plotly_dark")
+
+# Adjust layout settings to avoid label overlap
+fig <- fig %>% layout(
+  margin = list(b = 150),  # Increase bottom margin to provide space for labels
+  xaxis = list(
+    tickangle = 45,  # Rotate x-axis tick labels
+    automargin = TRUE  # Automatically adjust margins to avoid overlap
+  )
+)
+
+# Display the plot
+fig
+
+
+```
+
+### Experience level categories:
+Our Dataset has 4 different experience categories:
+- EN: Entry-level / Junior
+- MI: Mid-level / Intermediate
+- SE: Senior-level / Expert
+- EX: Executive-level / Director
+
+```{r}
+# Create a mapping of category abbreviations to full names
+category_names_experience <- c("EN" = "Entry-level",
+                    "MI" = "Mid-level",
+                    "SE" = "Senior-level",
+                    "EX" = "Executive-level")
+
+# Get the sorted experience data
+experience <- head(sort(table(df$experience_level), decreasing = TRUE))
+
+# Replace the category names with full forms
+names(experience) <- category_names_experience[names(experience)]
+
+# Calculate the percentage for each category
+percentages <- round(100 * experience / sum(experience), 2)
+
+# Define a custom color palette
+custom_colors <- c("#FFA998", "#FF76BC", "#69D2E7", "#FFA600")
+
+# Create a pie chart with cute appearance
+pie(experience, labels = paste(names(experience), "(", percentages, "%)"), col = custom_colors, border = "white", clockwise = TRUE, init.angle = 90)
+
+# Add a legend with cute colors
+legend("topright", legend = names(experience), fill = custom_colors, border = "white", cex = 0.8)
+
+# Add a title with a cute font
+title("Experience Distribution", font.main = 1)
+
+```
+### Compnay size distribution 
+```{r}
+# Create a mapping of category abbreviations to full names
+category_names_company <- c("M" = "Medium",
+                    "L" = "Large",
+                    "S" = "Small"
+                   )
+
+
+# Get the sorted company size data
+company_size <- head(sort(table(df$company_size), decreasing = TRUE))
+
+# Replace the category names with full forms
+names(company_size) <- category_names_company[names(company_size)]
+
+# Set the maximum value for the y-axis
+max_count <- max(company_size)
+
+# Create a bar plot with adjusted y-axis limits
+barplot(company_size, col = custom_colors, main = "Company Size Distribution", xlab = "Company Size", ylab = "Count", ylim = c(0, max_count + 10))
+
+
+```
+### Salaries Distribution 
+```{r}
+# Set the scipen option to a high value
+options(scipen = 10)
+
+# Create boxplot of salaries
+bp <- boxplot(df$salary_in_usd / 1000, 
+        col = "skyblue", 
+        main = "Boxplot of Salaries",
+        ylab = "Salary in Thousands USD",
+        notch = TRUE)
+
+```
+### Salaries classification Distribution 
+```{r}
+
+
+# Get the sorted salary classification data
+salary_classification <- sort(table(df$salary_classification), decreasing = TRUE)
+
+
+salary_classification_df <- data.frame(salary_classification= names(salary_classification ), count = as.numeric(salary_classification ))
+
+fig <- plot_ly(
+  data = salary_classification_df,
+  x = ~reorder(salary_classification, -count),
+  y = ~count,
+  type = "bar",
+  marker = list(color = custom_colors),
+  text = ~count,
+  width = 700,
+  height = 400
+)
+
+fig <- fig %>% layout(
+  title = "Salary Classification Distribution",
+  xaxis = list(title = "Salary Classification"),
+  yaxis = list(title = "Count"),
+  font = list(size = 17),
+  template = "ggplot2"
+)
+
+fig
+
+
+
+```
+```{r}
+# Create a data frame with counts of experience levels by salary classification
+experience_salary <- table(df$experience_level, df$salary_classification)
+
+# Define custom colors for each experience level
+custom_colors <- c("#69D2E7", "#FFA600", "#FF6361", "#FFD700")
+
+# Create a data frame for the plot
+plot_data <- data.frame(Experience = rownames(experience_salary), 
+                        Salary_Classification = colnames(experience_salary), 
+                        Count = as.vector(experience_salary))
+
+# Convert Count column to numeric
+plot_data$Count <- as.numeric(plot_data$Count)
+
+# Create the bar plot
+library(plotly)
+fig <- plot_ly(data = plot_data, x = ~Salary_Classification, y = ~Count, 
+               color = ~Experience, colors = custom_colors, type = "bar") %>%
+  layout(title = "Experience Level by Salary Classification",
+         xaxis = list(title = "Salary Classification"),
+         yaxis = list(title = "Count"),
+         font = list(size = 17),
+         template = "plotly_dark")
+
+fig
+
+
+```
+
+
+
+4.  **Modeling**
+
+
+
+    a\. Logestic Regression
+
+    b\. Random Forest
+
+    c\. Decision Tree
+
+5.  **Evaluation and Results**
+
+    a\. Linear Regression
+
+    b\. Random Forest
+
+    c\. Decision Tree
+
+6.  **Major Challenges and Solutions\
+    **
+
+    -   Data is not updated
+
+    -   Data is imbalanced
+
+7.  **Conclusion and Future Work**
+
+8.  **References**
+
+    [The Data Scientist Job Outlook in 2023 \| 365 Data Science](https://365datascience.com/career-advice/data-scientist-job-outlook/)
+
+    [Which Industry Pays the Highest Data Scientist Salary? How To Make The Most Money As A Data Scientist - Zippia](https://www.zippia.com/advice/highest-paying-data-scientist-jobs/)
+
+    [Burtch-Works-Study_DS-PAP-2019.pdf (burtchworks.com)](https://www.burtchworks.com/wp-content/uploads/2019/06/Burtch-Works-Study_DS-PAP-2019.pdf)
+
+    [New Visier Report Reveals 79% of Employees Want Pay Transparency (prnewswire.com)](https://www.prnewswire.com/news-releases/new-visier-report-reveals-79-of-employees-want-pay-transparency-301527305.html)
+
+    [More NA organizations plan to disclose pay information - WTW (wtwco.com)](https://www.wtwco.com/en-us/news/2022/09/more-north-american-organizations-plan-to-disclose-pay-information-survey-finds)
+
+    [Study: Pay Transparency Reduces Recruiting Costs (shrm.org)](https://www.shrm.org/resourcesandtools/hr-topics/talent-acquisition/pages/pay-transparency-reduces-recruiting-costs.aspx)
