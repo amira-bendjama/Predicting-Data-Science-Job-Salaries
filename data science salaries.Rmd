@@ -9,14 +9,14 @@ output:
 
 ***Anh Nguyen, Amira Bendjama, Hong Doan***
 
-1.  **Introduction and Problem Statement**\
+1.  **Introduction and Problem Statement**
 
     The field of data science has experienced remarkable growth in recent years, with organizations across diverse industries recognizing the value of data-driven decision making. According to an article by 365 Data Science, the US Bureau of Labor Statistics estimated that the employment rate for data scientists will grow by 36% from 2021 to 2031. This rate is significantly higher than the average growth rate of 5%, indicating substantial growth and demand for data science talent. The surging demand for data science presents both opportunities and challenges for job seekers, particularly recent graduates. One of the significant hurdles they face is the lack of salary transparency in the data science job market. This opacity creates uncertainty regarding compensation and hinders job seekers' ability to negotiate fair salaries.
 
     There are significant variations in data science salaries across different industries and locations. For instance, according to Zippia, data scientists working in the finance and technology sectors tend to earn higher salaries compared to those in other industries. Similarly, the geographical location also plays a crucial role in determining salaries. Large cities with higher concentration of tech companies and living costs such as San Francisco and New York offer higher salaries than smaller cities.
 
     The discrepancies in data science salaries can also be attributed to various factors, including job responsibilities, experience level, educational background, and specific skill sets. A study conducted by Burtch Works, a leading executive recruiting firm, found that data scientists with advanced degrees, such as Ph.D., tend to command higher salaries compared to those with bachelor's or master's degrees. Similarly, professionals with expertise in specialized areas, such as machine learning or natural language processing, often earn higher salaries due to the high demand for these skills.
-
+    
     According to a report surveyed 1,000 US-based full-time employees, conducted by Visier, 79% of all survey respondents want some form of pay transparency and 32% want total transparency, in which all employee salaries are publicized. However, the 2022 Pay Clarity Survey by WTW found that only 17% of companies are disclosing pay range information in U.S. locations where not required by state or local laws. For the states that have pay transparency laws such as Colorado and New York, there has been a decline in job postings since the law went into effect. Some employers comply with the new laws by expanding the salary ranges, sometimes to ridiculous lengths. These statistics highlight the lack of pay transparency not only in the field of data science, but across multiple job markets. Job seekers often struggle to estimate salaries for data science positions due to the scarcity of reliable information.
 
     To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
@@ -295,6 +295,54 @@ fig
     b\. Random Forest
 
     c\. Decision Tree
+```{r}
+View(df)
+```
+```{r}
+summary(df)
+
+```
+```{r}
+unique_values <- lapply(df, unique)
+print(unique_values)
+```
+
+
+```{r}
+set.seed(123)  # For reproducibility
+
+# Generate random indices for splitting
+indices <- sample(1:nrow(df), size = nrow(df), replace = FALSE)
+
+# Calculate the number of rows for training and testing sets
+train_size <- round(0.8 * nrow(df))
+test_size <- nrow(df) - train_size
+
+# Split the dataset into training and testing sets
+train_data <- df[indices[1:train_size], ]
+test_data <- df[indices[(train_size + 1):nrow(df)], ]
+
+# Check dimensions of the training and testing sets
+dim(train_data)
+dim(test_data)
+```
+```{r}
+library("rpart")
+library("rpart.plot")
+
+
+salary<- rpart(salary_classification ~ remote_ratio + company_size + experience_level + employment_type,
+            data = train_data,
+            method="class",
+            minsplit=5, cp=0.02)
+# I only tried attributes with a limited number of unique values because using attributes like job_title and employee_residence caused the program to run endlessly.
+# remote_ratio is the most useful variable for prediction
+```
+
+
+```{r}
+rpart.plot(salary, type=2, extra=101, box.palette=list("Blues", "Oranges", "Grays", "Greens"))
+```
 
 6.  **Major Challenges and Solutions\
     **
