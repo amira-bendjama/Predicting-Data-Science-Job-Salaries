@@ -282,19 +282,59 @@ fig
 
 
 
-    a\. Logestic Regression
+    a\. Support Vector Machine (SVM) 
+    
+
+```{r}
+set.seed(123)  # Set a seed for reproducibility
+train_indices <- sample(1:nrow(df), 0.8 * nrow(df))  # 80% for training
+train_data <- df[train_indices, ]
+test_data <- df[-train_indices, ]
+```
+    
+```{r}
+X <- train_data[, -which(names(train_data) %in% c("salary_in_usd", "salary_classification"))]
+y <- train_data$salary_in_usd
+```
+
+```{r}
+library(caret)
+library(lattice)
+preprocess <- preProcess(X, method = c("center", "scale"))
+X_scaled <- predict(preprocess, X)
+```
+
+```{r}
+library(e1071)
+model <- svm(y ~ ., data = as.data.frame(X_scaled), kernel = "linear")
+```
+
+
+```{r}
+test_data_scaled <- predict(preprocess, newdata = test_data[, -which(names(test_data) %in% c("salary_in_usd", "salary_classification"))])
+predicted_salaries <- predict(model, newdata = test_data_scaled)
+```
+
+```{r}
+mse <- mean_squared_error(test_data$salary_in_usd, predicted_salaries)
+rmse <- sqrt(mse)
+```
+
+```{r}
+plot_data <- data.frame(actual = test_data$salary_in_usd, predicted = predicted_salaries)
+ggplot(plot_data, aes(x = actual, y = predicted)) + 
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  labs(x = "Actual Salary", y = "Predicted Salary") +
+  ggtitle("Actual vs. Predicted Salaries")
+```
+
+
 
     b\. Random Forest
 
     c\. Decision Tree
 
-5.  **Evaluation and Results**
-
-    a\. Linear Regression
-
-    b\. Random Forest
-
-    c\. Decision Tree
 ```{r}
 View(df)
 ```
@@ -343,7 +383,16 @@ salary<- rpart(salary_classification ~ remote_ratio + company_size + experience_
 ```{r}
 rpart.plot(salary, type=2, extra=101, box.palette=list("Blues", "Oranges", "Grays", "Greens"))
 ```
+5.  **Evaluation and Results**
 
+    a\. Linear Regression
+
+    b\. Random Forest
+
+    c\. Decision Tree
+    
+    
+    
 6.  **Major Challenges and Solutions\
     **
 
