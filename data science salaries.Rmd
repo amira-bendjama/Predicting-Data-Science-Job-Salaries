@@ -1,8 +1,6 @@
 ---
 title: "Data Science Salaries"
-output:
-  html_document:
-    df_print: paged
+output: html_notebook
 ---
 
 # Predicting Data Science Salaries
@@ -32,9 +30,25 @@ output:
 
 ```
 * Import data
+
+```{r}
+# Read the first CSV file
+data1 <- read.csv("ds_salaries_2023.csv")
+
+# Read the second CSV file excluding the first column
+data2 <- read.csv("ds_salaries.csv")[,-1]
+
+# Append rows from data2 to data1
+combined_data <- rbind(data2, data1)
+
+# Write the combined data to a new CSV file
+write.csv(combined_data, "combined_salaries.csv", row.names = FALSE)
+
+```
+
 ```{r}
 library(ggplot2)
-ds_salaries <- read.csv("ds_salaries.csv")
+ds_salaries <- read.csv("combined_salaries.csv")
 ```
 * Data description
 ```{r}
@@ -53,7 +67,7 @@ This dataset has 607 rows and 12 columns
 
 We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
 ```{r}
-ds_salaries <- subset(ds_salaries, select = -c(X , salary_currency, salary))
+ds_salaries <- subset(ds_salaries, select = -c( salary_currency, salary))
 head(ds_salaries, 5)
 ```
 
@@ -95,6 +109,7 @@ high_threshold <- percentiles[2]  # 75th percentile
 df$salary_classification <- ifelse(df$salary_in_usd < low_threshold, "Low",
                                    ifelse(df$salary_in_usd > high_threshold, "High", "Medium"))
 
+table(df$salary_classification)
 ```
 
 
@@ -251,7 +266,7 @@ fig
 experience_salary <- table(df$experience_level, df$salary_classification)
 
 # Define custom colors for each experience level
-custom_colors <- c("#69D2E7", "#FFA600", "#FF6361", "#FFD700")
+custom_colors <- c("#69D2E7", "#1900ff", "#FF6361", "#FFD700")
 
 # Create a data frame for the plot
 plot_data <- data.frame(Experience = rownames(experience_salary), 
@@ -279,49 +294,93 @@ fig
 
 
 4.  **Modeling**
-
-
-
-    a\. Support Vector Machine (SVM) 
-    
-
+a\. Logistic regression
 ```{r}
-set.seed(123)  # Set a seed for reproducibility
+df$salary_classification <- factor(df$salary_classification)
+# 3 - 58
+set.seed(3)  # Set a seed for reproducibility
 train_indices <- sample(1:nrow(df), 0.8 * nrow(df))  # 80% for training
 train_data <- df[train_indices, ]
 test_data <- df[-train_indices, ]
+
+# Separate the features (independent variables) from the target variable
+# #X <- train_data[, !(names(train_data) %in% c("salary_in_usd", "salary_classification"))]
+X <- train_data[,c("experience_level","company_size","remote_ratio")]
+Y <- train_data$salary_classification
+```
+```{r}
+# Fit the logistic regression model
+logistic_model <- multinom(Y ~ ., data = X)
+
+# Make predictions on the test data
+test_data$predicted_classification <- predict(logistic_model, newdata = test_data)
+
+# Evaluate model performance
+library(caret)
+confusion_matrix <- confusionMatrix(test_data$predicted_classification, test_data$salary_classification)
+
+print(confusion_matrix)
+
+```
+b\. Random Forest 
+
+```{r}
+# Load the randomForest package
+library(randomForest)
+library(caret)
+
+# Train the Random Forest classifier
+rf_model <- randomForest(X, Y)
+
+# Make predictions on new data
+# Assuming you have a data frame called test_data with similar features as train_data
+predictions <- predict(rf_model, test_data)
+
+# Calculate accuracy
+accuracy <- sum(predictions == test_data$salary_classification) / length(test_data$salary_classification)
+cat("Accuracy:", accuracy, "\n")
+
+# Create confusion matrix
+conf_matrix <- table(predictions, test_data$salary_classification)
+cat("Confusion Matrix:\n")
+print(conf_matrix)
+
+# Calculate precision, recall, and F1-score for each class
+class_metrics <- caret::confusionMatrix(predictions, test_data$salary_classification)
+cat("Class Metrics:\n")
+print(class_metrics$byClass)
+```
+
+
+```{r}
+importance <- varImp(rf_model)
+print(importance)
+
+
+```
+c\. Support Vector Machine (SVM) 
+```{r}
+library(e1071)
+# Train the SVM classifier
+svm_model <- svm(Y ~ ., data = X, kernel = "radial")
+
+# Make predictions on new data
+# Assuming you have a data frame called test_data with similar features as train_data
+predictions <- predict(svm_model, test_data)
+
+# Evaluate the model
+# Assuming you have the actual target variable values in test_data$salary_classification
+accuracy <- sum(predictions == test_data$salary_classification) / length(test_data$salary_classification)
+cat("Accuracy:", accuracy, "\n")
+
+# Create confusion matrix
+conf_matrix <- table(predictions, test_data$salary_classification)
+cat("Confusion Matrix:\n")
+print(conf_matrix)
 ```
     
 ```{r}
-X <- train_data[, -which(names(train_data) %in% c("salary_in_usd", "salary_classification"))]
-y <- train_data$salary_in_usd
-```
-
-```{r}
-library(caret)
-library(lattice)
-preprocess <- preProcess(X, method = c("center", "scale"))
-X_scaled <- predict(preprocess, X)
-```
-
-```{r}
-library(e1071)
-model <- svm(y ~ ., data = as.data.frame(X_scaled), kernel = "linear")
-```
-
-
-```{r}
-test_data_scaled <- predict(preprocess, newdata = test_data[, -which(names(test_data) %in% c("salary_in_usd", "salary_classification"))])
-predicted_salaries <- predict(model, newdata = test_data_scaled)
-```
-
-```{r}
-mse <- mean_squared_error(test_data$salary_in_usd, predicted_salaries)
-rmse <- sqrt(mse)
-```
-
-```{r}
-plot_data <- data.frame(actual = test_data$salary_in_usd, predicted = predicted_salaries)
+plot_data <- data.frame(actual = test_data$salary_classification, predicted = predictions)
 ggplot(plot_data, aes(x = actual, y = predicted)) + 
   geom_point() +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
@@ -329,27 +388,16 @@ ggplot(plot_data, aes(x = actual, y = predicted)) +
   ggtitle("Actual vs. Predicted Salaries")
 ```
 
-
-
-    b\. Random Forest
-
-    c\. Decision Tree
+    d\. Decision Tree
 
 ```{r}
-View(df)
-```
-```{r}
-summary(df)
-
-```
-```{r}
-unique_values <- lapply(df, unique)
-print(unique_values)
+#unique_values <- lapply(df, unique)
+#print(unique_values)
 ```
 
 
 ```{r}
-set.seed(123)  # For reproducibility
+set.seed(3)  # For reproducibility
 
 # Generate random indices for splitting
 indices <- sample(1:nrow(df), size = nrow(df), replace = FALSE)
@@ -371,33 +419,32 @@ library("rpart")
 library("rpart.plot")
 
 
-salary<- rpart(salary_classification ~ remote_ratio + company_size + experience_level + employment_type,
+decision_tree <- rpart(salary_classification ~ remote_ratio + company_size + experience_level + employment_type,
             data = train_data,
-            method="class",
-            minsplit=5, cp=0.02)
+            method="class")
 # I only tried attributes with a limited number of unique values because using attributes like job_title and employee_residence caused the program to run endlessly.
 # remote_ratio is the most useful variable for prediction
+
+# Make predictions on test data
+predictions <- predict(decision_tree, newdata = test_data, type = "class")
+
+# Evaluate the model
+accuracy <- sum(predictions == test_data$salary_classification) / nrow(test_data)
+print(paste("Accuracy:", accuracy))
+rpart.plot(decision_tree)
+
 ```
 
 
 ```{r}
 rpart.plot(salary, type=2, extra=101, box.palette=list("Blues", "Oranges", "Grays", "Greens"))
 ```
-5.  **Evaluation and Results**
-
-    a\. Linear Regression
-
-    b\. Random Forest
-
-    c\. Decision Tree
-    
-    
     
 6.  **Major Challenges and Solutions\
     **
 
     -   Data is not updated
-
+    -   Dataset imbalance 
     -   Data is imbalanced
 
 7.  **Conclusion and Future Work**
