@@ -127,6 +127,8 @@ top10_job_title_df <- data.frame(job_title = names(top10_job_title), count = as.
 top10_job_title_df
 
 ```
+
+
 ```{r}
 # Load the required packages
 library(plotly)
@@ -154,6 +156,8 @@ fig
 
 
 ```
+
+- Data engineer, data scientist and data analyst are the top 3 job titles in the data set. 74% of our data fall under these job title categories.The distribution of this job title category is imbalanced.
 
 ### Experience level categories:
 Our Dataset has 4 different experience categories:
@@ -191,6 +195,9 @@ legend("topright", legend = names(experience), fill = custom_colors, border = "w
 title("Experience Distribution", font.main = 1)
 
 ```
+- Senior-level category accounts for almost 59% of our data, followed by mid-level (27%) and entry-level (10%). The distribution of experience category is imbalanced.
+
+
 ### Compnay size distribution 
 ```{r}
 # Create a mapping of category abbreviations to full names
@@ -214,6 +221,9 @@ barplot(company_size, col = custom_colors, main = "Company Size Distribution", x
 
 
 ```
+- The company size category distribution is imbalanced with majority of the data falls under medium size.
+
+
 ### Salaries Distribution 
 ```{r}
 # Set the scipen option to a high value
@@ -227,6 +237,9 @@ bp <- boxplot(df$salary_in_usd / 1000,
         notch = TRUE)
 
 ```
+- For the salary attribute, the median value is a little above $100,000. The min value is around $70,000. The max value is around $300,000. There are some outlines, which show salary greater than the max value. These could be the salary of the executives. 
+
+
 ### Salaries classification Distribution 
 ```{r}
 
@@ -261,6 +274,8 @@ fig
 
 
 ```
+- For salary range category, the medium range accounts for approximatly half of our data.
+
 ```{r}
 # Create a data frame with counts of experience levels by salary classification
 experience_salary <- table(df$experience_level, df$salary_classification)
