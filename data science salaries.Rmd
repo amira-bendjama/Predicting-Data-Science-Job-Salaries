@@ -17,7 +17,7 @@ output: html_notebook
     
     According to a report surveyed 1,000 US-based full-time employees, conducted by Visier, 79% of all survey respondents want some form of pay transparency and 32% want total transparency, in which all employee salaries are publicized. However, the 2022 Pay Clarity Survey by WTW found that only 17% of companies are disclosing pay range information in U.S. locations where not required by state or local laws. For the states that have pay transparency laws such as Colorado and New York, there has been a decline in job postings since the law went into effect. Some employers comply with the new laws by expanding the salary ranges, sometimes to ridiculous lengths. These statistics highlight the lack of pay transparency not only in the field of data science, but across multiple job markets. Job seekers often struggle to estimate salaries for data science positions due to the scarcity of reliable information.
 
-    To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
+    To address this problem, our project aims to develop a multiclass classification model that predict the the salary range for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.
 
 2.  **Data Sources and Data preparation**
  * Install packages 
@@ -295,6 +295,12 @@ fig
 
 4.  **Modeling**
 a\. Logistic regression
+
+```{r}
+install.packages("nnet")
+```
+
+
 ```{r}
 df$salary_classification <- factor(df$salary_classification)
 # 3 - 58
@@ -325,7 +331,7 @@ print(confusion_matrix)
 b\. Random Forest 
 
 ```{r}
-# Load the randomForest package
+# Load the random Forest package
 library(randomForest)
 library(caret)
 
