@@ -449,9 +449,8 @@ rpart.plot(decision_tree)
 6.  **Major Challenges and Solutions\
     **
 
-    -   Data is not updated
     -   Dataset imbalance 
-    -   Data is imbalanced
+
 
 7.  **Conclusion and Future Work**
 
