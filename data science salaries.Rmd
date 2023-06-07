@@ -7,7 +7,7 @@ output: html_notebook
 
 ***Anh Nguyen, Amira Bendjama, Hong Doan***
 
-1.  **Introduction and Problem Statement**
+## 1.  **Introduction and Problem Statement**
 
     The field of data science has experienced remarkable growth in recent years, with organizations across diverse industries recognizing the value of data-driven decision making. According to an article by 365 Data Science, the US Bureau of Labor Statistics estimated that the employment rate for data scientists will grow by 36% from 2021 to 2031. This rate is significantly higher than the average growth rate of 5%, indicating substantial growth and demand for data science talent. The surging demand for data science presents both opportunities and challenges for job seekers, particularly recent graduates. One of the significant hurdles they face is the lack of salary transparency in the data science job market. This opacity creates uncertainty regarding compensation and hinders job seekers' ability to negotiate fair salaries.
 
@@ -19,7 +19,7 @@ output: html_notebook
 
     To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
 
-2.  **Data Sources and Data preparation**
+## 2.  **Data Sources and Data preparation**
  * Install packages 
 ```{r}
 #install.packages("rpart.plot")
@@ -293,22 +293,65 @@ fig
 
 
 
-4.  **Modeling**
-a\. Logistic regression
+## 4.  **Modeling**
 ```{r}
-df$salary_classification <- factor(df$salary_classification)
+
+# Calculate the percentiles
+percentiles <- quantile(df$salary_in_usd, probs = c(0.5))
+
+# Define the threshold
+threshold <- percentiles[1]  # 50th percentile
+
+# Create a new column based on the threshold
+df$salary_classification_Binary <- ifelse(df$salary_in_usd < threshold, "Low", "High")
+
+# Display the table of salary classifications
+table(df$salary_classification_Binary)
+
+# Calculate the median of the column df$salary_in_usd
+median_salary <- median(df$salary_in_usd, na.rm = TRUE)
+print(median_salary)
+```
+
+
+### a\. Logistic regression
+```{r}
+df$company_location <- ifelse(df$company_location == "US", "US", "Other")
+df$employee_residence <- ifelse(df$employee_residence == "US", "US", "Other")
+df$job_title <- ifelse(grepl("Data Science", df$job_title) | grepl("Data Scientist", df$job_title), "Data Scientist",
+                       ifelse(grepl("Analyst", df$job_title) | grepl("Analytics", df$job_title), "Data Analyst",
+                                     ifelse(grepl("Data Engineer", df$job_title) | grepl("Data Engineering", df$job_title), "Data Engineer",
+                                            "Other")))
+```
+```{r}
+table(df$job_title)
+table(df$employee_residence)
+table(df$company_location)
+```
+```{r}
+df <- data.frame(lapply(df, factor))
+factors <- sapply(df, is.factor)
+factor_cols <- names(df[factors])
+factor_cols
+```
+
+```{r}
+
+
 # 3 - 58
 set.seed(3)  # Set a seed for reproducibility
-train_indices <- sample(1:nrow(df), 0.8 * nrow(df))  # 80% for training
+train_indices <- sample(1:nrow(df), 0.9 * nrow(df))  # 80% for training
 train_data <- df[train_indices, ]
 test_data <- df[-train_indices, ]
 
 # Separate the features (independent variables) from the target variable
-# #X <- train_data[, !(names(train_data) %in% c("salary_in_usd", "salary_classification"))]
-X <- train_data[,c("experience_level","company_size","remote_ratio")]
+X <- train_data[, !(names(train_data) %in% c("salary_in_usd", "salary_classification"))]
+#X <- train_data[,c("experience_level","company_size","remote_ratio")]
 Y <- train_data$salary_classification
 ```
 ```{r}
+library(nnet)
+
 # Fit the logistic regression model
 logistic_model <- multinom(Y ~ ., data = X)
 
@@ -322,7 +365,7 @@ confusion_matrix <- confusionMatrix(test_data$predicted_classification, test_dat
 print(confusion_matrix)
 
 ```
-b\. Random Forest 
+### b\. Random Forest 
 
 ```{r}
 # Load the randomForest package
@@ -358,7 +401,7 @@ print(importance)
 
 
 ```
-c\. Support Vector Machine (SVM) 
+### c\. Support Vector Machine (SVM) 
 ```{r}
 library(e1071)
 # Train the SVM classifier
@@ -378,49 +421,17 @@ conf_matrix <- table(predictions, test_data$salary_classification)
 cat("Confusion Matrix:\n")
 print(conf_matrix)
 ```
-    
-```{r}
-plot_data <- data.frame(actual = test_data$salary_classification, predicted = predictions)
-ggplot(plot_data, aes(x = actual, y = predicted)) + 
-  geom_point() +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
-  labs(x = "Actual Salary", y = "Predicted Salary") +
-  ggtitle("Actual vs. Predicted Salaries")
-```
 
-    d\. Decision Tree
-
-```{r}
-#unique_values <- lapply(df, unique)
-#print(unique_values)
-```
+### d\. Decision Tree
 
 
-```{r}
-set.seed(3)  # For reproducibility
-
-# Generate random indices for splitting
-indices <- sample(1:nrow(df), size = nrow(df), replace = FALSE)
-
-# Calculate the number of rows for training and testing sets
-train_size <- round(0.8 * nrow(df))
-test_size <- nrow(df) - train_size
-
-# Split the dataset into training and testing sets
-train_data <- df[indices[1:train_size], ]
-test_data <- df[indices[(train_size + 1):nrow(df)], ]
-
-# Check dimensions of the training and testing sets
-dim(train_data)
-dim(test_data)
-```
 ```{r}
 library("rpart")
 library("rpart.plot")
 
 
-decision_tree <- rpart(salary_classification ~ remote_ratio + company_size + experience_level + employment_type,
-            data = train_data,
+decision_tree <- rpart(Y ~ .,
+            data = X,
             method="class")
 # I only tried attributes with a limited number of unique values because using attributes like job_title and employee_residence caused the program to run endlessly.
 # remote_ratio is the most useful variable for prediction
@@ -434,12 +445,7 @@ print(paste("Accuracy:", accuracy))
 rpart.plot(decision_tree)
 
 ```
-
-
-```{r}
-rpart.plot(salary, type=2, extra=101, box.palette=list("Blues", "Oranges", "Grays", "Greens"))
-```
-    
+  
 6.  **Major Challenges and Solutions\
     **
 
