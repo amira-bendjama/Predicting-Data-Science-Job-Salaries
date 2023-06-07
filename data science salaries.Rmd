@@ -294,24 +294,6 @@ fig
 
 
 ## 4.  **Modeling**
-```{r}
-
-# Calculate the percentiles
-percentiles <- quantile(df$salary_in_usd, probs = c(0.5))
-
-# Define the threshold
-threshold <- percentiles[1]  # 50th percentile
-
-# Create a new column based on the threshold
-df$salary_classification_Binary <- ifelse(df$salary_in_usd < threshold, "Low", "High")
-
-# Display the table of salary classifications
-table(df$salary_classification_Binary)
-
-# Calculate the median of the column df$salary_in_usd
-median_salary <- median(df$salary_in_usd, na.rm = TRUE)
-print(median_salary)
-```
 
 
 ### a\. Logistic regression
