@@ -69,7 +69,7 @@ summary(ds_salaries)
 head(ds_salaries,5)
 ```
 
-This dataset has 607 rows and 12 columns
+This data set has 4362 rows and 12 columns
 
 We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
 
@@ -94,7 +94,6 @@ repeated_entries <- subset(ds_salaries, duplicated(ds_salaries))
 print(repeated_entries)
 ```
 
-There are 42 duplicate rows
 
 -   Remove duplicates
 
