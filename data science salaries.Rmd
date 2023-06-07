@@ -7,20 +7,24 @@ output: html_notebook
 
 ***Anh Nguyen, Amira Bendjama, Hong Doan***
 
-## 1.  **Introduction and Problem Statement**
+## 1. **Introduction and Problem Statement**
 
-    The field of data science has experienced remarkable growth in recent years, with organizations across diverse industries recognizing the value of data-driven decision making. According to an article by 365 Data Science, the US Bureau of Labor Statistics estimated that the employment rate for data scientists will grow by 36% from 2021 to 2031. This rate is significantly higher than the average growth rate of 5%, indicating substantial growth and demand for data science talent. The surging demand for data science presents both opportunities and challenges for job seekers, particularly recent graduates. One of the significant hurdles they face is the lack of salary transparency in the data science job market. This opacity creates uncertainty regarding compensation and hinders job seekers' ability to negotiate fair salaries.
+```         
+The field of data science has experienced remarkable growth in recent years, with organizations across diverse industries recognizing the value of data-driven decision making. According to an article by 365 Data Science, the US Bureau of Labor Statistics estimated that the employment rate for data scientists will grow by 36% from 2021 to 2031. This rate is significantly higher than the average growth rate of 5%, indicating substantial growth and demand for data science talent. The surging demand for data science presents both opportunities and challenges for job seekers, particularly recent graduates. One of the significant hurdles they face is the lack of salary transparency in the data science job market. This opacity creates uncertainty regarding compensation and hinders job seekers' ability to negotiate fair salaries.
 
-    There are significant variations in data science salaries across different industries and locations. For instance, according to Zippia, data scientists working in the finance and technology sectors tend to earn higher salaries compared to those in other industries. Similarly, the geographical location also plays a crucial role in determining salaries. Large cities with higher concentration of tech companies and living costs such as San Francisco and New York offer higher salaries than smaller cities.
+There are significant variations in data science salaries across different industries and locations. For instance, according to Zippia, data scientists working in the finance and technology sectors tend to earn higher salaries compared to those in other industries. Similarly, the geographical location also plays a crucial role in determining salaries. Large cities with higher concentration of tech companies and living costs such as San Francisco and New York offer higher salaries than smaller cities.
 
-    The discrepancies in data science salaries can also be attributed to various factors, including job responsibilities, experience level, educational background, and specific skill sets. A study conducted by Burtch Works, a leading executive recruiting firm, found that data scientists with advanced degrees, such as Ph.D., tend to command higher salaries compared to those with bachelor's or master's degrees. Similarly, professionals with expertise in specialized areas, such as machine learning or natural language processing, often earn higher salaries due to the high demand for these skills.
-    
-    According to a report surveyed 1,000 US-based full-time employees, conducted by Visier, 79% of all survey respondents want some form of pay transparency and 32% want total transparency, in which all employee salaries are publicized. However, the 2022 Pay Clarity Survey by WTW found that only 17% of companies are disclosing pay range information in U.S. locations where not required by state or local laws. For the states that have pay transparency laws such as Colorado and New York, there has been a decline in job postings since the law went into effect. Some employers comply with the new laws by expanding the salary ranges, sometimes to ridiculous lengths. These statistics highlight the lack of pay transparency not only in the field of data science, but across multiple job markets. Job seekers often struggle to estimate salaries for data science positions due to the scarcity of reliable information.
+The discrepancies in data science salaries can also be attributed to various factors, including job responsibilities, experience level, educational background, and specific skill sets. A study conducted by Burtch Works, a leading executive recruiting firm, found that data scientists with advanced degrees, such as Ph.D., tend to command higher salaries compared to those with bachelor's or master's degrees. Similarly, professionals with expertise in specialized areas, such as machine learning or natural language processing, often earn higher salaries due to the high demand for these skills.
 
-    To address this problem, our project aims to develop a predictive model that estimates the salary for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.\
+According to a report surveyed 1,000 US-based full-time employees, conducted by Visier, 79% of all survey respondents want some form of pay transparency and 32% want total transparency, in which all employee salaries are publicized. However, the 2022 Pay Clarity Survey by WTW found that only 17% of companies are disclosing pay range information in U.S. locations where not required by state or local laws. For the states that have pay transparency laws such as Colorado and New York, there has been a decline in job postings since the law went into effect. Some employers comply with the new laws by expanding the salary ranges, sometimes to ridiculous lengths. These statistics highlight the lack of pay transparency not only in the field of data science, but across multiple job markets. Job seekers often struggle to estimate salaries for data science positions due to the scarcity of reliable information.
 
-## 2.  **Data Sources and Data preparation**
- * Install packages 
+To address this problem, our project aims to develop a multiclass classification model that predict the the salary range for data science jobs. By leveraging publicly available data and employing machine learning algorithms, we seek to provide job seekers a better understanding of salary expectations within the data science job market and empower them to negotiate fair and competitive compensation packages.
+```
+
+## 2. **Data Sources and Data preparation**
+
+-   Install packages
+
 ```{r}
 #install.packages("rpart.plot")
 #install.packages("ggplot2")
@@ -29,7 +33,8 @@ output: html_notebook
 #install.packages("plotly")
 
 ```
-* Import data
+
+-   Import data
 
 ```{r}
 # Read the first CSV file
@@ -50,42 +55,49 @@ write.csv(combined_data, "combined_salaries.csv", row.names = FALSE)
 library(ggplot2)
 ds_salaries <- read.csv("combined_salaries.csv")
 ```
-* Data description
+
+-   Data description
+
 ```{r}
 summary(ds_salaries)
 
 ```
 
+-   The first 5 rows
 
-
-* The first 5 rows 
 ```{r}
 head(ds_salaries,5)
 ```
+
 This dataset has 607 rows and 12 columns
 
-
 We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
+
 ```{r}
 ds_salaries <- subset(ds_salaries, select = -c( salary_currency, salary))
 head(ds_salaries, 5)
 ```
 
-* Check for null values
+-   Check for null values
+
 ```{r}
 num_null_rows <- sum(rowSums(is.na(ds_salaries)) == ncol(ds_salaries))
 print(num_null_rows)
 ```
+
 There are no null values
 
-* Check for duplicate rows
+-   Check for duplicate rows
+
 ```{r}
 repeated_entries <- subset(ds_salaries, duplicated(ds_salaries))
 print(repeated_entries)
 ```
+
 There are 42 duplicate rows
 
-* Remove duplicates
+-   Remove duplicates
+
 ```{r}
 # Remove duplicate rows
 df <- ds_salaries[!duplicated(ds_salaries), ]
@@ -93,7 +105,9 @@ df <- ds_salaries[!duplicated(ds_salaries), ]
 repeated_entries_new <- subset(df, duplicated(df))
 print(repeated_entries_new)
 ```
-### Salaries groups 
+
+### Salaries groups
+
 Adding new column to split our salaries into three groups Low , High, Medium.The approach is to use Percentiles by Dividing the dataset based on them. Hence, we are classifying salaries below the 25th percentile as "Low", salaries between the 25th and 75th percentile as "Medium", and salaries above the 75th percentile as "High".
 
 ```{r}
@@ -112,12 +126,9 @@ df$salary_classification <- ifelse(df$salary_in_usd < low_threshold, "Low",
 table(df$salary_classification)
 ```
 
-
 3.  **Data Exploration and Visualization**
 
-### Top 10 Jobs in the dataset: 
-
-
+### Top 10 Jobs in the dataset:
 
 ```{r}
 # Get top 10 job titles and their value counts
@@ -127,6 +138,7 @@ top10_job_title_df <- data.frame(job_title = names(top10_job_title), count = as.
 top10_job_title_df
 
 ```
+
 ```{r}
 # Load the required packages
 library(plotly)
@@ -154,13 +166,11 @@ fig
 
 
 ```
+- The job title category distribution is imbalanced with almost 74% of the data are under the top 3 job titles (data engineer, data scientist and data analyst).
 
 ### Experience level categories:
-Our Dataset has 4 different experience categories:
-- EN: Entry-level / Junior
-- MI: Mid-level / Intermediate
-- SE: Senior-level / Expert
-- EX: Executive-level / Director
+
+Our Dataset has 4 different experience categories: - EN: Entry-level / Junior - MI: Mid-level / Intermediate - SE: Senior-level / Expert - EX: Executive-level / Director
 
 ```{r}
 # Create a mapping of category abbreviations to full names
@@ -191,7 +201,11 @@ legend("topright", legend = names(experience), fill = custom_colors, border = "w
 title("Experience Distribution", font.main = 1)
 
 ```
-### Compnay size distribution 
+- Senior-level category accounts for almost 59% of our data, followed by mid-level (27%) and entry-level (10%). The distribution of experience category is imbalanced.
+
+
+### Compnay size distribution
+
 ```{r}
 # Create a mapping of category abbreviations to full names
 category_names_company <- c("M" = "Medium",
@@ -214,7 +228,10 @@ barplot(company_size, col = custom_colors, main = "Company Size Distribution", x
 
 
 ```
-### Salaries Distribution 
+- The company size category distribution is imbalanced with majority of the data falls under medium size.
+
+### Salaries Distribution
+
 ```{r}
 # Set the scipen option to a high value
 options(scipen = 10)
@@ -227,7 +244,10 @@ bp <- boxplot(df$salary_in_usd / 1000,
         notch = TRUE)
 
 ```
-### Salaries classification Distribution 
+- For the salary attribute, the median value is a little above $100,000. The min value is around $70,000. The max value is around $300,000. There are some outlines, which show salary greater than the max value. These could be the salary of the executives.
+
+### Salaries classification Distribution
+
 ```{r}
 
 
@@ -261,6 +281,8 @@ fig
 
 
 ```
+- For salary classification category, the medium range accounts for approximately half of our data.
+
 ```{r}
 # Create a data frame with counts of experience levels by salary classification
 experience_salary <- table(df$experience_level, df$salary_classification)
@@ -290,13 +312,12 @@ fig
 
 
 ```
+- Looking at the distribution of the data by salary classification and experience level, the senior level accounts for majority of data in the medium and high salary classification, which makes sense. In the low salary classfication, entry level and medium level account for the majority of data. 
 
+## 4. **Modeling**
 
+### a. Logistic regression
 
-## 4.  **Modeling**
-
-
-### a\. Logistic regression
 ```{r}
 df$company_location <- ifelse(df$company_location == "US", "US", "Other")
 df$employee_residence <- ifelse(df$employee_residence == "US", "US", "Other")
@@ -305,11 +326,13 @@ df$job_title <- ifelse(grepl("Data Science", df$job_title) | grepl("Data Scienti
                                      ifelse(grepl("Data Engineer", df$job_title) | grepl("Data Engineering", df$job_title), "Data Engineer",
                                             "Other")))
 ```
+
 ```{r}
 table(df$job_title)
 table(df$employee_residence)
 table(df$company_location)
 ```
+
 ```{r}
 df <- data.frame(lapply(df, factor))
 factors <- sapply(df, is.factor)
@@ -331,6 +354,7 @@ X <- train_data[, !(names(train_data) %in% c("salary_in_usd", "salary_classifica
 #X <- train_data[,c("experience_level","company_size","remote_ratio")]
 Y <- train_data$salary_classification
 ```
+
 ```{r}
 library(nnet)
 
@@ -347,7 +371,8 @@ confusion_matrix <- confusionMatrix(test_data$predicted_classification, test_dat
 print(confusion_matrix)
 
 ```
-### b\. Random Forest 
+
+### b. Random Forest
 
 ```{r}
 # Load the randomForest package
@@ -376,14 +401,15 @@ cat("Class Metrics:\n")
 print(class_metrics$byClass)
 ```
 
-
 ```{r}
 importance <- varImp(rf_model)
 print(importance)
 
 
 ```
-### c\. Support Vector Machine (SVM) 
+
+### c. Support Vector Machine (SVM)
+
 ```{r}
 library(e1071)
 # Train the SVM classifier
@@ -404,8 +430,7 @@ cat("Confusion Matrix:\n")
 print(conf_matrix)
 ```
 
-### d\. Decision Tree
-
+### d. Decision Tree
 
 ```{r}
 library("rpart")
@@ -427,12 +452,11 @@ print(paste("Accuracy:", accuracy))
 rpart.plot(decision_tree)
 
 ```
-  
+
 6.  **Major Challenges and Solutions\
     **
 
-    -   Dataset imbalance 
-
+    -   Dataset imbalance
 
 7.  **Conclusion and Future Work**
 
