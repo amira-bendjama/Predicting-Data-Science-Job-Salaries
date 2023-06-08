@@ -315,6 +315,17 @@ fig
 
 ## 4. **Modeling**
 ### 4.1. Feature engineering 
+
+In the feature engineering process, several modifications have been made to enhance the balance and categorization of specific columns. The following changes have been implemented:
+
+1. Company Location and Employee Residence: The "company_location" and "employee_residence" variables have been updated to ensure better balance in the categories. The values in these columns have been transformed into either "US" or "Other". This modification aims to create a more balanced representation of company and employee locations, which can improve the model's performance.
+
+2. Job Titles: The original dataset contains a wide range of job titles (95 categories), which can lead to complexity and overfitting in the model. To simplify and generalize the job titles, they have been grouped into four categories: "Data Analyst", "Data Engineer", "Data Scientist", and "Other". This categorization allows for a more concise representation of job roles, reducing the dimensionality and enhancing interpretability in the model.
+
+To handle the categorical columns, the "Factor()" function has been used. This function converts the categorical variables into factors, which are a type of data structure in R that represent categorical data. By converting the features into factors, it enables the model to understand and utilize the categorical information effectively.
+
+The selected features for the model include "work_year", "experience_level", "employment_type", "job_title", "employee_residence", "remote_ratio", "company_location", and "company_size". These features provide relevant information related to work experience, level, type of employment, job title, employee and company locations, remote work ratio, and company size. The target variable for the model is the "salary_classification" column, which classifies salaries into three categories: "Low", "Medium", and "High".
+
 ```{r}
 table(df$job_title)
 ```
@@ -378,6 +389,10 @@ print(confusion_matrix)
 
 ```
 
+    - The accuracy of the model is reported as 0.6554, which means that approximately 65.54% of the predictions made by the model are correct. 
+    - The model shows relatively lower sensitivity for the "High" class and higher sensitivity for the "Low" and "Medium" classes. This indicates that the model has difficulty correctly identifying instances belonging to the "High" class, while it performs better in identifying instances from the "Low" and "Medium" classes.
+    
+
 ### b. Random Forest
 
 ```{r}
@@ -406,13 +421,19 @@ class_metrics <- caret::confusionMatrix(predictions, test_data$salary_classifica
 cat("Class Metrics:\n")
 print(class_metrics$byClass)
 ```
-
+    - The Random Forest model achieved an accuracy of approximately 0.659 (65.92%). This means that around 65.92% of the predictions made by the model on the test data were correct.
+    -  It demonstrates relatively higher accuracy, sensitivity, and precision for the "Low" and "Medium" classes compared to the "High" class. However, it shows lower performance in terms of sensitivity and precision for the "High" class, indicating difficulties in correctly identifying instances belonging to that class.
+    
 ```{r}
 importance <- varImp(rf_model)
 print(importance)
 
 
 ```
+
+The variable importance measures obtained from the Random Forest model provide valuable insights into the relative contribution of each feature in predicting the salary classification. Among the features, "experience_level" and "employee_residence" stand out as the most influential variables with importance values of 100.35 and 108.70, respectively. These findings suggest that an employee's experience level and their residence location play crucial roles in determining the salary classification. The "job_title" and "company_location" features also demonstrate notable importance, with values of 49.63 and 89.74, respectively, indicating that job title and company location significantly impact salary classification. Additionally, moderately important features such as "work_year" (25.56), "remote_ratio" (27.46), and "company_size" (26.49) contribute to the model's predictions.
+
+On the other hand, the "employment_type" feature exhibits a relatively lower importance value of 7.41, suggesting that it has a weaker impact on the model's predictions compared to other variables. While the "employment_type" may have some relevance, it seems to provide less discriminatory power for salary classification in the context of the Random Forest model.
 
 ### c. Support Vector Machine (SVM)
 
