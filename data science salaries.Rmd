@@ -428,7 +428,6 @@ print(class_metrics$byClass)
 importance <- varImp(rf_model)
 print(importance)
 
-
 ```
 
 The variable importance measures obtained from the Random Forest model provide valuable insights into the relative contribution of each feature in predicting the salary classification. Among the features, "experience_level" and "employee_residence" stand out as the most influential variables with importance values of 100.35 and 108.70, respectively. These findings suggest that an employee's experience level and their residence location play crucial roles in determining the salary classification. The "job_title" and "company_location" features also demonstrate notable importance, with values of 49.63 and 89.74, respectively, indicating that job title and company location significantly impact salary classification. Additionally, moderately important features such as "work_year" (25.56), "remote_ratio" (27.46), and "company_size" (26.49) contribute to the model's predictions.
@@ -484,6 +483,9 @@ rpart.plot(decision_tree)
     - Not up-to-date dataset : salaries changes over time
     - Geographic Bias : mostly include data from United states 
     - Dataset features are imbalance which explains the accuracy results
+    - Class imbalance: it might explain the lower predictions for “High” class
+    - Job titles generalization for the feature engineering 
+
 
 
 7.  **Conclusion and Future Work**
