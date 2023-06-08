@@ -314,8 +314,10 @@ fig
 - Looking at the distribution of the data by salary classification and experience level, the senior level accounts for majority of data in the medium and high salary classification, which makes sense. In the low salary classfication, entry level and medium level account for the majority of data. 
 
 ## 4. **Modeling**
-
-### a. Logistic regression
+### 4.1. Feature engineering 
+```{r}
+table(df$job_title)
+```
 
 ```{r}
 df$company_location <- ifelse(df$company_location == "US", "US", "Other")
@@ -337,6 +339,11 @@ df <- data.frame(lapply(df, factor))
 factors <- sapply(df, is.factor)
 factor_cols <- names(df[factors])
 factor_cols
+```
+### a. Logistic regression
+```{r}
+column_names <- colnames(data1)
+print(column_names)
 ```
 
 ```{r}
@@ -439,8 +446,6 @@ library("rpart.plot")
 decision_tree <- rpart(Y ~ .,
             data = X,
             method="class")
-# I only tried attributes with a limited number of unique values because using attributes like job_title and employee_residence caused the program to run endlessly.
-# remote_ratio is the most useful variable for prediction
 
 # Make predictions on test data
 predictions <- predict(decision_tree, newdata = test_data, type = "class")
@@ -454,8 +459,11 @@ rpart.plot(decision_tree)
 
 6.  **Major Challenges and Solutions\
     **
+    - Missing important features: such as educational background, years of experience, or industry sector  
+    - Not up-to-date dataset : salaries changes over time
+    - Geographic Bias : mostly include data from United states 
+    - Dataset features are imbalance which explains the accuracy results
 
-    -   Dataset imbalance
 
 7.  **Conclusion and Future Work**
 
