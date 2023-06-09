@@ -69,7 +69,7 @@ summary(ds_salaries)
 head(ds_salaries,5)
 ```
 
-This data set has 4362 rows and 12 columns
+This data set has 4362 rows and 11 columns
 
 We want to focus on "USD" currency so we keep the "salary_in_usd" column and drop "salary_currency" and "salary" column by using subset()
 
@@ -125,7 +125,7 @@ df$salary_classification <- ifelse(df$salary_in_usd < low_threshold, "Low",
 table(df$salary_classification)
 ```
 
-3.  **Data Exploration and Visualization**
+## 3.  **Data Exploration and Visualization**
 
 ### Top 10 Jobs in the dataset:
 
@@ -135,7 +135,6 @@ top10_job_title <- head(sort(table(df$job_title), decreasing = TRUE), 10)
 
 top10_job_title_df <- data.frame(job_title = names(top10_job_title), count = as.numeric(top10_job_title))
 top10_job_title_df
-
 ```
 
 ```{r}
@@ -153,7 +152,7 @@ fig <- plot_ly(data = top10_job_title_df, x = ~reorder(job_title, -count), y = ~
 
 # Adjust layout settings to avoid label overlap
 fig <- fig %>% layout(
-  margin = list(b = 150),  # Increase bottom margin to provide space for labels
+  margin = list(b = 150, t = 100),  # Increase bottom and top margin to provide space for labels
   xaxis = list(
     tickangle = 45,  # Rotate x-axis tick labels
     automargin = TRUE  # Automatically adjust margins to avoid overlap
@@ -162,8 +161,6 @@ fig <- fig %>% layout(
 
 # Display the plot
 fig
-
-
 ```
 - The job title category distribution is imbalanced with almost 74% of the data are under the top 3 job titles (data engineer, data scientist and data analyst).
 
@@ -198,7 +195,6 @@ legend("topright", legend = names(experience), fill = custom_colors, border = "w
 
 # Add a title with a cute font
 title("Experience Distribution", font.main = 1)
-
 ```
 - Senior-level category accounts for almost 59% of our data, followed by mid-level (27%) and entry-level (10%). The distribution of experience category is imbalanced.
 
@@ -224,8 +220,6 @@ max_count <- max(company_size)
 
 # Create a bar plot with adjusted y-axis limits
 barplot(company_size, col = custom_colors, main = "Company Size Distribution", xlab = "Company Size", ylab = "Count", ylim = c(0, max_count + 10))
-
-
 ```
 - The company size category distribution is imbalanced with majority of the data falls under medium size.
 
@@ -241,7 +235,6 @@ bp <- boxplot(df$salary_in_usd / 1000,
         main = "Boxplot of Salaries",
         ylab = "Salary in Thousands USD",
         notch = TRUE)
-
 ```
 - For the salary attribute, the median value is a little above $100,000. The min value is around $70,000. The max value is around $300,000. There are some outlines, which show salary greater than the max value. These could be the salary of the executives.
 
@@ -276,9 +269,6 @@ fig <- fig %>% layout(
 )
 
 fig
-
-
-
 ```
 - For salary classification category, the medium range accounts for approximately half of our data.
 
@@ -308,8 +298,6 @@ fig <- plot_ly(data = plot_data, x = ~Salary_Classification, y = ~Count,
          template = "plotly_dark")
 
 fig
-
-
 ```
 - Looking at the distribution of the data by salary classification and experience level, the senior level accounts for majority of data in the medium and high salary classification, which makes sense. In the low salary classfication, entry level and medium level account for the majority of data. 
 
@@ -386,7 +374,6 @@ library(caret)
 confusion_matrix <- confusionMatrix(test_data$predicted_classification, test_data$salary_classification)
 
 print(confusion_matrix)
-
 ```
 
     - The accuracy of the model is reported as 0.6554, which means that approximately 65.54% of the predictions made by the model are correct. 
@@ -427,7 +414,6 @@ print(class_metrics$byClass)
 ```{r}
 importance <- varImp(rf_model)
 print(importance)
-
 ```
 
 The variable importance measures obtained from the Random Forest model provide valuable insights into the relative contribution of each feature in predicting the salary classification. Among the features, "experience_level" and "employee_residence" stand out as the most influential variables with importance values of 100.35 and 108.70, respectively. These findings suggest that an employee's experience level and their residence location play crucial roles in determining the salary classification. The "job_title" and "company_location" features also demonstrate notable importance, with values of 49.63 and 89.74, respectively, indicating that job title and company location significantly impact salary classification. Additionally, moderately important features such as "work_year" (25.56), "remote_ratio" (27.46), and "company_size" (26.49) contribute to the model's predictions.
@@ -474,7 +460,6 @@ predictions <- predict(decision_tree, newdata = test_data, type = "class")
 accuracy <- sum(predictions == test_data$salary_classification) / nrow(test_data)
 print(paste("Accuracy:", accuracy))
 rpart.plot(decision_tree)
-
 ```
 
 6.  **Major Challenges and Solutions\
@@ -489,6 +474,12 @@ rpart.plot(decision_tree)
 
 
 7.  **Conclusion and Future Work**
+
+- Continuous data updating: Update the dataset with the most recent salary information by scraping salary data and incorporating additional features such as degree level and certifications from reliable sources or leveraging APIs. This will ensure that the dataset reflects current salary trends and provide a deeper insight into the determinants of salaries.
+
+- Migrate geographic bias by expand the data collection to include the data from a wide range of locations, not just limited to the U.S. Incorporate salary data from different countries or regions to provide a more comprehensive and representative view of the data science job market.
+
+- Explore advanced modeling techniques:  such as neural network and ensemble methods to handle class imbalance. 
 
 8.  **References**
 
