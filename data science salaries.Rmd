@@ -1,6 +1,8 @@
 ---
 title: "Data Science Salaries"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Predicting Data Science Salaries
